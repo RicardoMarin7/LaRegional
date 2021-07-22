@@ -40,7 +40,7 @@ const Navigation = () => {
                         break
                     }
 
-                    return <IconButton icon={ iconName } size = {size} color= {color}/>
+                    return <IconButton icon={ iconName } size = {size} color= {color} />
                 }
             })}
 
