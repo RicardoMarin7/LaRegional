@@ -1,0 +1,18 @@
+Fondo
+    #151419
+
+Degradado de 
+    #5bc6fc y #8377e9
+
+Botones
+    #8377e9
+
+https://www.behance.net/gallery/122893787/Finance-management-app-Income-and-Expense-tracker?tracking_source=search_projects_recommended%7Capp
+
+Primary
+    #f04e60
+
+Accent
+    #d04959
+
+https://www.behance.net/gallery/97449853/Mobile-App-for-Mafia-Game-Players?tracking_source=search_projects_recommended%7Capp
