@@ -48,7 +48,8 @@ const Navigation = () => {
                 activeTintColor: '#f04e60',
                 inactiveTintColor: '#777777',
             }}
-
+            
+            
             
         >
 

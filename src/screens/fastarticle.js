@@ -1,11 +1,14 @@
 import React, { useState } from 'react'
 import { StyleSheet, SafeAreaView, ScrollView, ToastAndroid } from 'react-native'
 import { Title, TextInput, Button, List} from 'react-native-paper'
+import firestore from '../utils/firebase'
+
 
 const FastArticle = () => {
     const [article, setArticle] = useState(defaultValues());
     const [expandedTax, setExpandedTax] = useState(false);
     const [expandedLine, setExpandedLine] = useState(false);
+    const [errors, setErrors] = useState(defaultValues());
 
     const handleTaxChange = tax =>{
         setArticle({...article, tax: tax})
@@ -17,8 +20,54 @@ const FastArticle = () => {
         setExpandedLine(false)
     }
 
-    const handleCreateArticle = () =>{
+    const saveArticle = async (article) =>{
+        try {
+            const doc = firestore.collection('Productos').doc(article.code)
+            const response = await doc.set({...article, downloaded: false})
+            console.log(response)
+        } catch (error) {
+            console.log(error)
+        }
         
+    }
+
+    const handleCreateArticle = () =>{
+        let errors = {}
+        if(article.code === '' || article.description === '' || article.price === '' || article.cost === '' || article.tax === '' || article.line === ''){
+            if(article.code === '') errors.code = true
+            if(article.description === '') errors.description = true
+            if(article.price === '') errors.price = true
+            if(article.cost === '') errors.cost = true
+            if(article.tax === '') errors.tax = true
+            if(article.line === '') errors.line = true
+            setErrors(errors)
+            return
+        }
+
+        // const NO_SPACES = new RegExp('\\s')
+        const NO_SPACES = new RegExp('^(\\d|\\w)+$')
+
+        if(!NO_SPACES.test(article.code)){
+            errors.code = true
+            ToastAndroid.showWithGravity('El código del artículo no debe tener espacios ni caracteres especiales', ToastAndroid.LONG, ToastAndroid.CENTER)
+            setErrors(errors)
+            return
+        }
+
+        if(isNaN(article.price)){
+            errors.price = true
+            ToastAndroid.showWithGravity('El precio del artículo no debe tener espacios ni caracteres especiales', ToastAndroid.LONG, ToastAndroid.CENTER)
+            return
+        }
+
+        if(isNaN(article.cost)){
+            errors.cost = true
+            ToastAndroid.showWithGravity('El costo del artículo no debe tener espacios ni caracteres especiales', ToastAndroid.LONG, ToastAndroid.CENTER)
+            return
+        }
+
+        setErrors(errors)
+        saveArticle(article)
     }
 
     return ( 
@@ -29,6 +78,7 @@ const FastArticle = () => {
                     label='Código'
                     style={styles.input}
                     onChange={ e => setArticle({...article, code: e.nativeEvent.text})}
+                    error={errors.code}
                 />
 
                 <TextInput
@@ -36,6 +86,7 @@ const FastArticle = () => {
                     style={styles.input}
                     multiline
                     onChange={ e => setArticle({...article, description: e.nativeEvent.text})}
+                    error={errors.description}
                 />
 
                 <TextInput
@@ -43,6 +94,7 @@ const FastArticle = () => {
                     style={styles.input}
                     onChange={ e => setArticle({...article, cost: e.nativeEvent.text})}
                     keyboardType='numeric'
+                    error={errors.cost}
                 />
 
                 <TextInput
@@ -50,6 +102,7 @@ const FastArticle = () => {
                     style={styles.input}
                     onChange={ e => setArticle({...article, price: e.nativeEvent.text})}
                     keyboardType='numeric'
+                    error={errors.price}
                 />
 
                 
@@ -57,10 +110,11 @@ const FastArticle = () => {
                 <List.Section title="Opciones" style={styles.listContainer}>
                     <List.Accordion
                         title={`Impuesto`}
-                        style={styles.list}
+                        style={errors.line && styles.error}
                         expanded={expandedTax}
                         onPress={ () => setExpandedTax(!expandedTax)}
                         description={article.tax === '' ? 'Seleccionar Impuesto' : article.tax}
+                        error={errors.tax}
                     >
                         <List.Item title="IVA" description='Valor de impuesto: 16' onPress={() => handleTaxChange('IVA')}/>
                         <List.Item title="IE3" description='Valor de impuesto: 8' onPress={() => handleTaxChange('IE3')}/>
@@ -68,7 +122,7 @@ const FastArticle = () => {
 
                     <List.Accordion
                         title={`Linea`}
-                        style={styles.list}
+                        style={errors.line && styles.error}
                         expanded={expandedLine}
                         onPress={ () => setExpandedLine(!expandedLine)}
                         description={article.line === '' ? 'Seleccionar Linea' : article.line}
@@ -78,7 +132,7 @@ const FastArticle = () => {
                     </List.Accordion>
                 </List.Section>
 
-                <Button mode="contained" style={styles.button} dark onPress={() => console.log('pressed')}>
+                <Button mode="contained" style={styles.button} dark onPress={handleCreateArticle}>
                     Crear Artículo
                 </Button>
             </ScrollView>
@@ -108,6 +162,9 @@ const styles = {
         marginTop: 10,
         width: '80%',
         alignSelf: 'center'
+    },
+    error:{
+        backgroundColor: '#f04e60'
     }
  
 }
