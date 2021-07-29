@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { StyleSheet, SafeAreaView, ScrollView, ToastAndroid } from 'react-native'
 import { Title, TextInput, Button, List} from 'react-native-paper'
 import firestore from '../utils/firebase'
+import { size, map } from 'lodash'
+import useCloudContext from '../hooks/useCloudContext'
 
 
 const FastArticle = () => {
@@ -9,6 +11,7 @@ const FastArticle = () => {
     const [expandedTax, setExpandedTax] = useState(false);
     const [expandedLine, setExpandedLine] = useState(false);
     const [errors, setErrors] = useState(defaultValues());
+    const {lines} = useCloudContext()
 
     const handleTaxChange = tax =>{
         setArticle({...article, tax: tax})
@@ -44,7 +47,6 @@ const FastArticle = () => {
             return
         }
 
-        // const NO_SPACES = new RegExp('\\s')
         const NO_SPACES = new RegExp('^(\\d|\\w)+$')
 
         if(!NO_SPACES.test(article.code)){
@@ -118,6 +120,7 @@ const FastArticle = () => {
                     >
                         <List.Item title="IVA" description='Valor de impuesto: 16' onPress={() => handleTaxChange('IVA')}/>
                         <List.Item title="IE3" description='Valor de impuesto: 8' onPress={() => handleTaxChange('IE3')}/>
+                        <List.Item title="SYS" description='Valor de impuesto: Sin Impuesto' onPress={() => handleTaxChange('SYS')}/>
                     </List.Accordion>
 
                     <List.Accordion
@@ -127,8 +130,11 @@ const FastArticle = () => {
                         onPress={ () => setExpandedLine(!expandedLine)}
                         description={article.line === '' ? 'Seleccionar Linea' : article.line}
                     >
-                        <List.Item title="Bebidas" description='JUGOS REFRESCOS AGUAS' onPress={() => handleLineChange('BEBIDAS')}/>
-                        <List.Item title="Botanas" description='FRITURAS PAPAS SEMILLAS' onPress={() => handleLineChange('BOTANAS')}/>
+                        { size(lines) > 0 && (
+                            map(lines, line =>(
+                                <List.Item title={line.line} description={line.description} onPress={() => handleLineChange(line.line)} key={line.line}/>
+                            ))
+                        )}
                     </List.Accordion>
                 </List.Section>
 

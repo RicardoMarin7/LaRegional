@@ -3,7 +3,7 @@ import { SafeAreaView, StyleSheet, ToastAndroid, LogBox} from 'react-native'
 import { TextInput, Button } from 'react-native-paper'
 import firestore from '../utils/firebase'
 
-LogBox.ignoreLogs(['Setting a timer'])
+LogBox.ignoreLogs(['Setting a timer','AsyncStorage'])
 
 const Login = ({setUser}) => {
     
@@ -12,6 +12,7 @@ const Login = ({setUser}) => {
         user: false,
         password: false
     });
+    const [secureText, setSecureText] = useState(true);
     const [loading, setLoading] = useState(false);
 
     const login = async () =>{
@@ -23,7 +24,7 @@ const Login = ({setUser}) => {
             if(!loginData.password) errors.password = true
         }
         setformError(errors)
-
+        setLoading(false)
         if(formError.user || formError.password) return
 
         try {
@@ -37,9 +38,6 @@ const Login = ({setUser}) => {
             }
 
             let auth = false
-            // response.forEach( doc => {
-                console.log('Received', response.data().password)
-                console.log( 'Decrypted',decryptUserPassword(response.data().password).toUpperCase())
                 if(loginData.password.toUpperCase() === decryptUserPassword(response.data().password).toUpperCase()){
                     auth = true
                 }
@@ -47,19 +45,16 @@ const Login = ({setUser}) => {
                 if(!auth){
                     ToastAndroid.showWithGravity('La contraseña no es correcta', ToastAndroid.SHORT, ToastAndroid.CENTER)
                     return  
-                }
-
-                setLoading(false)
+                }       
 
                 setUser({
                     user: response.data().user,
                     supervisor: response.data().supervisor
                 })
-            // })
 
             
         } catch (error) {
-            ToastAndroid.show(error, ToastAndroid.LONG)
+            ToastAndroid.show(error.toString(), ToastAndroid.LONG)
         }
 
     }
@@ -90,8 +85,8 @@ const Login = ({setUser}) => {
 
             <TextInput 
                 label='Contraseña'
-                secureTextEntry
-                right={<TextInput.Icon name='eye' />}
+                secureTextEntry={secureText}
+                right={<TextInput.Icon name='eye' onPress={() => setSecureText(!secureText)} />}
                 style={paperStyles.text}
                 value={loginData.password}
                 error={formError.password}
