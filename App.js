@@ -34,25 +34,26 @@ const App = () => {
   DarkThemeNavigation.colors.background = '#232429'
   DarkThemeNavigation.colors.card = '#232429'
 
-  // useEffect(() => {
-  //   (async () =>{
-  //     const response = (await firestore.collection('Lineas').get()).docs
-  //     const lines = response.map( line => (
-  //         line.data()
-  //     ))
-  //     setLines(lines)
-  //   })()
-  // }, []);
+  useEffect(() => {
+    (async () =>{
+      const response = (await firestore.collection('Lineas').get()).docs
+      const lines = response.map( line => (
+          line.data()
+      ))
+      setLines(lines)
+    })()
+  }, []);
 
-  // useEffect(() => {
-  //   (async () =>{
-  //     const response = (await firestore.collection('Productos').get()).docs
-  //     const products = response.map( line => (
-  //         line.data()
-  //     ))
-  //     setProducts(products)
-  //   })()
-  // }, []);
+  useEffect(() => {
+    (async () =>{
+      const response = (await firestore.collection('Productos').get()).docs
+      const products = response.map( line => (
+          line.data()
+      ))
+      setProducts(products)
+      console.log('Products Charged')
+    })()
+  }, []);
 
   const cloudContext = useMemo(
     () =>({

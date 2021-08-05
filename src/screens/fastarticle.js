@@ -23,11 +23,12 @@ const FastArticle = () => {
         setExpandedLine(false)
     }
 
-    const saveArticle = async (article) =>{
+    const saveArticleFirestore = async (article) =>{
         try {
             const doc = firestore.collection('Productos').doc(article.code)
-            const response = await doc.set({...article, downloaded: false})
-            console.log(response)
+            const response = await doc.set({...article, server: false, app: true})
+            ToastAndroid.showWithGravity(`Articulo ${article.code} guardado con éxito `, ToastAndroid.LONG, ToastAndroid.CENTER)
+            setArticle(defaultValues())
         } catch (error) {
             console.log(error)
         }
@@ -69,7 +70,7 @@ const FastArticle = () => {
         }
 
         setErrors(errors)
-        saveArticle(article)
+        saveArticleFirestore(article)
     }
 
     return ( 
@@ -81,6 +82,7 @@ const FastArticle = () => {
                     style={styles.input}
                     onChange={ e => setArticle({...article, code: e.nativeEvent.text})}
                     error={errors.code}
+                    value={article.code}
                 />
 
                 <TextInput
@@ -89,6 +91,7 @@ const FastArticle = () => {
                     multiline
                     onChange={ e => setArticle({...article, description: e.nativeEvent.text})}
                     error={errors.description}
+                    value={article.description}
                 />
 
                 <TextInput
@@ -97,6 +100,7 @@ const FastArticle = () => {
                     onChange={ e => setArticle({...article, cost: e.nativeEvent.text})}
                     keyboardType='numeric'
                     error={errors.cost}
+                    value={article.cost}
                 />
 
                 <TextInput
@@ -105,6 +109,7 @@ const FastArticle = () => {
                     onChange={ e => setArticle({...article, price: e.nativeEvent.text})}
                     keyboardType='numeric'
                     error={errors.price}
+                    value={article.price}
                 />
 
                 
@@ -191,7 +196,5 @@ const defaultValues = () => ({
     cost:'',
     price:''
 })
-
-
 
 export default FastArticle;
