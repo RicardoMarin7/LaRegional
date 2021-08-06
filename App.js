@@ -13,6 +13,8 @@ import PreferencesContext from './src/context/PreferencesContext'
 import CloudContext from './src/context/CloudContext'
 import Login from './src/screens/login'
 import firestore from './src/utils/firebase'
+import Sqlite from './src/utils/Sqlite'
+import { map, size} from 'lodash'
 
 
 
@@ -20,6 +22,7 @@ const App = () => {
   const [user, setUser] = useState(true);
   const [products, setProducts] = useState([]);
   const [lines, setLines] = useState([])
+  const [users, setUsers] = useState([]);
 
   const primaryColor = '#f04e60'
   const secondaryColor = '#d04959'
@@ -34,25 +37,71 @@ const App = () => {
   DarkThemeNavigation.colors.background = '#232429'
   DarkThemeNavigation.colors.card = '#232429'
 
-  useEffect(() => {
-    (async () =>{
-      const response = (await firestore.collection('Lineas').get()).docs
-      const lines = response.map( line => (
-          line.data()
-      ))
-      setLines(lines)
-    })()
-  }, []);
+  // useEffect(() => {
+  //   (async () =>{
+  //     const response = (await firestore.collection('Lineas').get()).docs
+  //     const lines = response.map( line => (
+  //         line.data()
+  //     ))
+  //     setLines(lines)
+  //   })()
+  // }, []);
 
   useEffect(() => {
     (async () =>{
-      const response = (await firestore.collection('Productos').get()).docs
-      const products = response.map( line => (
-          line.data()
+      const response = (await firestore.collection('Usuarios').get()).docs
+      const users = response.map( user => (
+          user.data()
       ))
-      setProducts(products)
-      console.log('Products Charged')
+      setUsers(users)
     })()
+  }, []);
+
+  // useEffect(() => {
+  //   (async () =>{
+  //     const response = (await firestore.collection('Productos').get()).docs
+  //     const products = response.map( line => (
+  //         line.data()
+  //     ))
+  //     setProducts(products)
+  //     console.log('Products Charged')
+  //   })()
+  // }, []);
+
+  useEffect(() => {
+
+    // if(size(users) > 0){
+    //   map(users, user =>{
+    //       Sqlite.transaction(tx => {
+    //         tx.executeSql(`INSERT INTO users (name, password, supervisor, user)
+    //                         VALUES('${user.name}', '${user.password}', ${user.supervisor ? 1 : 0}, '${user.user}')
+    //         `,
+    //         [],
+    //         (tx, result) => console.log('Results',result),
+    //         error => console.log('Error', error))
+    //     })
+    //   })
+    // }
+
+  Sqlite.transaction(tx => {
+    tx.executeSql(`SELECT * FROM USERS`,
+    [],
+    (tx, result) =>{
+      for (let i = 0; i < result.rows.length; i++) {
+        console.log(result.rows.item(i))
+        
+      }
+    },
+    error => console.log('Error', error))
+  })
+
+  // Sqlite.transaction(tx => {
+  //   tx.executeSql(`DELETE FROM USERS`,
+  //   [],
+  //   (tx, result) =>console.log('Result', result),
+  //   error => console.log('Error', error))
+  // })
+
   }, []);
 
   const cloudContext = useMemo(

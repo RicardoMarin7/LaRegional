@@ -180,8 +180,8 @@ const Entries = () => {
                 )}
             </ScrollView>
             <View style={{flexDirection: 'row', marginHorizontal: 15}}>
-                <Title style={{fontSize: 16, flex: 1}}>{`Total: $${new Intl.NumberFormat("en-US").format(total)}`}</Title>
-                <Button style={{flex:1}} mode='contained'>Cerrar Entrada</Button>
+                <Title style={{fontSize: 16, flex: 3}}>{`Total: $${new Intl.NumberFormat("en-US").format(total)}`}</Title>
+                <Button style={{flex:1}} mode='contained'>Confirmar</Button>
             </View>
         </SafeAreaView>
     );
