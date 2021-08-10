@@ -14,9 +14,7 @@ import CloudContext from './src/context/CloudContext'
 import Login from './src/screens/login'
 import firestore from './src/utils/firebase'
 import Sqlite from './src/utils/Sqlite'
-import { map, size} from 'lodash'
-
-
+import { ToastAndroid } from 'react-native'
 
 const App = () => {
   const [user, setUser] = useState(true);
@@ -37,6 +35,92 @@ const App = () => {
   DarkThemeNavigation.colors.background = '#232429'
   DarkThemeNavigation.colors.card = '#232429'
 
+  const getLines = async () => {
+    try {
+      
+    } catch (error) {
+      
+    }
+  }
+
+  const getProducts = async () => {
+    try {
+      const response = await firestore.collection('Productos').where('app', '==', false).get()
+      response.forEach( async (productData) =>{
+        const product = productData.data()
+        console.log('Product', product)
+        Sqlite.transaction( tx => {
+          tx.executeSql(`SELECT * FROM products WHERE code = ?`,
+            [product.code],
+            (tx, results) =>{
+              if(results.rows.length > 0){
+                console.log('Update')
+                tx.executeSql(`UPDATE products SET 
+                              description = ?, 
+                              cost = ?, 
+                              price = ?, 
+                              tax = ?, 
+                              line = ? WHERE code = ?`,
+                [ product.description,
+                  product.cost,
+                  product.price,
+                  product.tax,
+                  product.line,
+                  product.code
+                ],
+                async (tx, result) => {
+                  await firestore.collection('Productos').doc(product.code).set({
+                    app: true
+                  }, {merge: true})
+                  console.log('Producto Actualizado con exito', product.code )
+                },
+                error => console.log('Error', error))
+              }else{
+                tx.executeSql(`INSERT INTO products (code, description, cost, price, tax, line)
+                              VALUES(?,?,?,?,?,?)`,
+                [
+                  product.code,
+                  product.description,
+                  product.cost,
+                  product.price,
+                  product.tax,
+                  product.line
+                ],
+                async (tx, result) => {
+                  await firestore.collection('Productos').doc(product.code).set({
+                    app: true
+                  }, {merge: true})
+                  console.log('Producto Guardado con exito', product.code )
+                },
+                error => console.log('error'))
+              }
+            },
+            error => console.log(error) //Callback de error
+          )
+        })
+      })
+    } catch (error) {
+      ToastAndroid.showWithGravity(error, ToastAndroid.LONG, ToastAndroid.CENTER)
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    getProducts()
+    Sqlite.transaction(tx => {
+    tx.executeSql(`SELECT * FROM PRODUCTS`,
+    [],
+    (tx, result) =>{
+      let productTemp = []
+      for (let i = 0; i < result.rows.length; i++) {
+        productTemp.push(result.rows.item(i))
+      }
+      setProducts(productTemp)
+    },
+    error => console.log('Error', error))
+  })
+  }, []);
+
   // useEffect(() => {
   //   (async () =>{
   //     const response = (await firestore.collection('Lineas').get()).docs
@@ -47,67 +131,45 @@ const App = () => {
   //   })()
   // }, []);
 
-  useEffect(() => {
-    (async () =>{
-      const response = (await firestore.collection('Usuarios').get()).docs
-      const users = response.map( user => (
-          user.data()
-      ))
-      setUsers(users)
-    })()
-  }, []);
-
   // useEffect(() => {
   //   (async () =>{
-  //     const response = (await firestore.collection('Productos').get()).docs
-  //     const products = response.map( line => (
-  //         line.data()
+  //     const response = (await firestore.collection('Usuarios').get()).docs
+  //     const users = response.map( user => (
+  //         user.data()
   //     ))
-  //     setProducts(products)
-  //     console.log('Products Charged')
+  //     setUsers(users)
   //   })()
   // }, []);
 
-  useEffect(() => {
-
-    // if(size(users) > 0){
-    //   map(users, user =>{
-    //       Sqlite.transaction(tx => {
-    //         tx.executeSql(`INSERT INTO users (name, password, supervisor, user)
-    //                         VALUES('${user.name}', '${user.password}', ${user.supervisor ? 1 : 0}, '${user.user}')
-    //         `,
-    //         [],
-    //         (tx, result) => console.log('Results',result),
-    //         error => console.log('Error', error))
-    //     })
-    //   })
-    // }
-
-  Sqlite.transaction(tx => {
-    tx.executeSql(`SELECT * FROM USERS`,
-    [],
-    (tx, result) =>{
-      for (let i = 0; i < result.rows.length; i++) {
-        console.log(result.rows.item(i))
-        
-      }
-    },
-    error => console.log('Error', error))
-  })
+  // useEffect(() => {
 
   // Sqlite.transaction(tx => {
-  //   tx.executeSql(`DELETE FROM USERS`,
+  //   tx.executeSql(`SELECT * FROM USERS`,
   //   [],
-  //   (tx, result) =>console.log('Result', result),
+  //   (tx, result) =>{
+  //     for (let i = 0; i < result.rows.length; i++) {
+  //       console.log(result.rows.item(i))
+        
+  //     }
+  //   },
   //   error => console.log('Error', error))
   // })
 
-  }, []);
+  // // Sqlite.transaction(tx => {
+  // //   tx.executeSql(`DELETE FROM USERS`,
+  // //   [],
+  // //   (tx, result) =>console.log('Result', result),
+  // //   error => console.log('Error', error))
+  // // })
+
+  // }, []);
 
   const cloudContext = useMemo(
     () =>({
     lines,
     products,
+    getLines,
+    getProducts
   }), [lines, products])
 
   const preferencesContext = useMemo(
