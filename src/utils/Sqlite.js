@@ -25,5 +25,16 @@ Sqlite.transaction(tx => {
     error => console.log('Error', error))
 })
 
+Sqlite.transaction(tx => {
+    tx.executeSql(`CREATE TABLE IF NOT EXISTS LINES (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    line TEXT UNIQUE,
+                    description TEXT)`,
+    [],
+    (tx, result) => null,
+    error => console.log('Error', error))
+})
+
+
+
 
 export default Sqlite
