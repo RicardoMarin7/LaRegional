@@ -1,19 +1,21 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { View} from 'react-native'
-import { Button, Text } from 'react-native-paper'
+import { Button, Title, ActivityIndicator} from 'react-native-paper'
 import DeviceInfo from 'react-native-device-info'
 import useCloudContext from '../hooks/useCloudContext'
 import Sqlite from '../utils/Sqlite'
 
 const Home = ({navigation}) => {
     const { getLines, setLines, getProducts, setProducts, products, lines } = useCloudContext()
+    const [loadingProducts, setLoadingProducts] = useState(true);
     
-    useEffect(() => {
-        getProducts(false)
+    useEffect(async () => {
+        await getProducts(false)
         Sqlite.transaction(tx => {
             tx.executeSql(`SELECT * FROM PRODUCTS`,
             [],
             (tx, result) =>{
+                console.log('Result products local', result.rows.length)
                 let productTemp = []
                 for (let i = 0; i < result.rows.length; i++) {
                     productTemp.push(result.rows.item(i))
@@ -22,6 +24,7 @@ const Home = ({navigation}) => {
             },
             error => console.log('Error', error))
         })
+        setLoadingProducts(false)
     }, []);
     
     useEffect(() => {
@@ -52,13 +55,21 @@ const Home = ({navigation}) => {
         console.log('Lines', lines);
     }, [lines]);
 
+    if(loadingProducts){
+        return(
+            <View style={{flex:1, alignContent:"center", justifyContent:'center'}}> 
+                <ActivityIndicator animating={true} size={72} />
+                <Title style={{textAlign:'center'}}>Cargando Productos</Title>
+                <Title style={{textAlign:'center'}}>No cierres la aplicación</Title>
+            </View>
+        )
+    }
+
     return ( 
         <View>
-            <Text>Productos: {products.length}</Text>
             <Button onPress={ () => navigation.navigate('fastarticle')} mode='contained'>
                 To Fast Articles
             </Button>
-
         </View>
     );
 }

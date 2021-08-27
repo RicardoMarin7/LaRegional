@@ -5,7 +5,8 @@ const PreferencesContext = createContext({
     secondaryColor:'',
     backgroundColor:'',
     textColor:'',
-    secondaryBackgroundColor: ''
+    secondaryBackgroundColor: '',
+    user: null,
 })
 
 export default PreferencesContext;

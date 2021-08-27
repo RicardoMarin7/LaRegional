@@ -18,10 +18,9 @@ import { ToastAndroid } from 'react-native'
 import DeviceInfo from 'react-native-device-info'
 
 const App = () => {
-  const [user, setUser] = useState(true);
+  const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [lines, setLines] = useState([])
-  const [users, setUsers] = useState([]);
 
   const primaryColor = '#f04e60'
   const secondaryColor = '#d04959'
@@ -40,7 +39,7 @@ const App = () => {
     try {
       let data
       console.log('Getting Lines')
-      const response = await firestore.collection(`Lineas${DeviceInfo.getUniqueId()}`).get()
+      const response = await firestore.collection(`Lineas${DeviceInfo.getUniqueId()}`).limit(1).get()
       
       if(response.empty){
         data = await firestore.collection(`Lineas`).get()
@@ -107,9 +106,9 @@ const App = () => {
     try {
       let data
       console.log('Getting Products')
-      const response = await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`).get()
+      const response = await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`).limit(1).get()
+      
       if(response.empty || isLocalEmpty){
-
         data = await firestore.collection(`Productos`).get()
       }else{
         data = await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`).where('app', '==', false).get()
@@ -117,7 +116,6 @@ const App = () => {
 
       if(data.empty){
         console.log('No hay productos por descargar')
-        return
       }
       
       data.forEach( async (productData) =>{
@@ -239,8 +237,9 @@ const App = () => {
     secondaryColor,
     backgroundColor,
     textColor,
-    secondaryBackgroundColor
-  }), [primaryColor, secondaryColor, backgroundColor, secondaryBackgroundColor])
+    secondaryBackgroundColor,
+    user
+  }), [primaryColor, secondaryColor, backgroundColor, secondaryBackgroundColor, textColor, user])
 
   return (
     <CloudContext.Provider value={cloudContext}>
