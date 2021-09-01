@@ -4,7 +4,7 @@ import { TextInput, Title, Card, Button, IconButton, Modal, Portal, List } from 
 import DeviceInfo from 'react-native-device-info'
 import usePreferencesContext from '../hooks/usePreferencesContext'
 import useCloudContext from '../hooks/useCloudContext'
-import { size, map, find } from 'lodash'
+import { size, map, find, filter} from 'lodash'
 import SearchBar from '../components/SearchBar'
 import firestore from '../utils/firebase'
 
@@ -62,9 +62,11 @@ const Exits = () => {
 
             await firestore.collection('Salidas').doc(folio.toString()).set({
                 ...exit,
+                folio,
                 deviceName,
                 deviceUniqueID,
-                user: user.user
+                user: user.user,
+                server: false
             })
 
             await firestore.collection('Folios').doc('Salidas').set({folio})
@@ -98,7 +100,8 @@ const Exits = () => {
                 return
             }
             setCodeInput('')
-            handleProductChange(code, 'quantity', alreadyAdded.quantity + 1)
+            console.log('Quantity', alreadyAdded.quantity + 1 )
+            handleProductChange(code.toUpperCase(), 'quantity', alreadyAdded.quantity + 1)
             return
         }
 
@@ -124,6 +127,7 @@ const Exits = () => {
                 exitProductsTemp.push({...exitProducts[i], [parameter]: value})
             }
         }
+        console.log(exitProductsTemp)
         setExitProducts(exitProductsTemp)
     }
 
@@ -132,7 +136,7 @@ const Exits = () => {
             ToastAndroid.showWithGravity(`La cantidad debe ser un número, verifique el articulo ${code}`, ToastAndroid.LONG, ToastAndroid.CENTER)
             return
         }
-        handleProductChange(code, 'quantity', Number(quantity))
+        handleProductChange(code.toUpperCase(), 'quantity', Number(quantity))
     }
 
     const calculateNewTotal = () =>{
@@ -142,6 +146,14 @@ const Exits = () => {
         }
 
         setExit({...exit, total: totalTemp})
+    }
+
+    const handleDeleteProduct = code => {
+        const exitProductsTemp = filter( exitProducts , product =>{
+            return product.code !== code
+        })
+
+        setExitProducts(exitProductsTemp)
     }
 
     const nativeStyles = StyleSheet.create({
@@ -230,9 +242,9 @@ const Exits = () => {
                     <Title style={paperStyles.title}>Salidas</Title>
                     <TextInput 
                         label={'Código'}
-                        right={<TextInput.Icon name='plus-thick' style={paperStyles.icon} onPress={() => console.log('click en icono')} />}
+                        right={<TextInput.Icon name='plus-thick' style={paperStyles.icon} onPress={ () => handleAddProduct( codeInput.toUpperCase())} />}
                         style={paperStyles.input}
-                        value={ codeInput }
+                        value={ codeInput.toUpperCase() }
                         onChange={ e => {setCodeInput(e.nativeEvent.text.trim())}}
                         autoCapitalize='characters'
                         blurOnSubmit={false}
@@ -258,7 +270,7 @@ const Exits = () => {
                                     /> 
                                     
                                     <IconButton icon='delete' size={24} color={colors.primaryColor} style={{flex: 1}} 
-                                        onPress={ () => null }
+                                        onPress={ () => handleDeleteProduct(product.code)}
                                     />
                                 </Card.Content>
                             </Card>

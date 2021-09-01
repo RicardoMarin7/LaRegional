@@ -64,7 +64,8 @@ const Entries = () => {
                 ...entry,
                 deviceName,
                 deviceUniqueID,
-                user: user.user
+                user: user.user,
+                server: false
             })
 
             await firestore.collection('Folios').doc('Entradas').set({folio})
@@ -230,9 +231,9 @@ const Entries = () => {
                     <Title style={paperStyles.title}>Entradas</Title>
                     <TextInput 
                         label={'Código'}
-                        right={<TextInput.Icon name='plus-thick' style={paperStyles.icon} onPress={() => console.log('click en icono')} />}
+                        right={<TextInput.Icon name='plus-thick' style={paperStyles.icon} onPress={ () => handleAddProduct(codeInput.toUpperCase())} />}
                         style={paperStyles.input}
-                        value={ codeInput }
+                        value={ codeInput.toUpperCase() }
                         onChange={ e => {setCodeInput(e.nativeEvent.text.trim())}}
                         autoCapitalize='characters'
                         blurOnSubmit={false}

@@ -30,7 +30,6 @@ const Login = ({setUser}) => {
         try {
             const data = firestore.collection('Usuarios').doc(loginData.user.toUpperCase())
             const response = await data.get({source:'server'})
-            console.log(response.exists)
 
             if(!response.exists){
                 ToastAndroid.showWithGravity('El usuario no existe', ToastAndroid.SHORT, ToastAndroid.CENTER)
@@ -60,9 +59,6 @@ const Login = ({setUser}) => {
     }
 
     const decryptUserPassword = password => {
-        console.log('Before', password);
-        // password = password.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
-        console.log('After', password);
         const KEY = (777 / 256) * 4
         let decryptedPassword = ""
         for(let i = 0; i < password.length ; i++){
