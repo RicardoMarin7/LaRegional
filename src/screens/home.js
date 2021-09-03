@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { View} from 'react-native'
 import { Button, Title, ActivityIndicator} from 'react-native-paper'
 import useCloudContext from '../hooks/useCloudContext'
-import { BLEPrinter } from 'react-native-thermal-receipt-printer'
 import Sqlite from '../utils/Sqlite'
 
 const Home = ({navigation}) => {
@@ -55,14 +54,6 @@ const Home = ({navigation}) => {
         console.log('Lines', lines);
     }, [lines]);
 
-    const printTest = async () =>{
-        try {
-            const init = BLEPrinter.printText('Hola Mundo', {})
-            console.log(init)            
-        } catch (error) {
-            console.log(error)
-        }
-    }
 
     if(loadingProducts){
         return(
@@ -76,7 +67,7 @@ const Home = ({navigation}) => {
 
     return ( 
         <View>
-            <Button onPress={printTest} mode='contained'>
+            <Button onPress={() => 'Log'} mode='contained'>
                 Print
             </Button>
         </View>
