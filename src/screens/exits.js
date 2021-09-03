@@ -107,7 +107,8 @@ const Exits = () => {
 
         const productToAdd = find( products, { code: code.toUpperCase() } )
         if(!productToAdd){
-            ToastAndroid.showWithGravity(`El articulo ${code}, no existe`, ToastAndroid.LONG, ToastAndroid.CENTER)
+            ToastAndroid.showWithGravity(`El articulo ${code}, no existe`, ToastAndroid.SHORT, ToastAndroid.CENTER)
+            setCodeInput('')
             return
         }
 

@@ -4,7 +4,7 @@ import { TextInput, Title, Card, Button, IconButton, Modal, Portal, List } from 
 import DeviceInfo from 'react-native-device-info'
 import usePreferencesContext from '../hooks/usePreferencesContext'
 import useCloudContext from '../hooks/useCloudContext'
-import { size, map, find } from 'lodash'
+import { size, map, find, filter } from 'lodash'
 import SearchBar from '../components/SearchBar'
 import firestore from '../utils/firebase'
 
@@ -22,7 +22,8 @@ const Entries = () => {
     const [entry, setEntry] = useState({
         total: 0,
         warehouse: null,
-        date: `${date.getDate()}-${date.getMonth()+1}-${date.getUTCFullYear()}`
+        date: `${date.getDate()}-${date.getMonth()+1}-${date.getUTCFullYear()}`,
+        observations:'',
     });
 
     useEffect(() => {
@@ -46,6 +47,14 @@ const Entries = () => {
         setNextStep(true)
         setEntry({...entry, products: entryProducts})
     }
+
+    const handleDeleteProduct = code => {
+        const entryProductsTemp = filter( entryProducts , product =>{
+            return product.code !== code
+        })
+
+        setEntryProducts(entryProductsTemp)
+    }
     
     const handleFinish = async () =>{
         try {
@@ -65,7 +74,8 @@ const Entries = () => {
                 deviceName,
                 deviceUniqueID,
                 user: user.user,
-                server: false
+                server: false,
+                time: `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
             })
 
             await firestore.collection('Folios').doc('Entradas').set({folio})
@@ -80,9 +90,6 @@ const Entries = () => {
 
             setEntryProducts([])
             setNextStep(false)
-
-            //print Ticket
-
 
         } catch (error) {
             ToastAndroid.showWithGravity(error.toString(), ToastAndroid.LONG, ToastAndroid.CENTER)
@@ -105,7 +112,8 @@ const Entries = () => {
 
         const productToAdd = find( products, { code: code.toUpperCase() } )
         if(!productToAdd){
-            ToastAndroid.showWithGravity(`El articulo ${code}, no existe`, ToastAndroid.LONG, ToastAndroid.CENTER)
+            ToastAndroid.showWithGravity(`El articulo ${code}, no existe`, ToastAndroid.SHORT, ToastAndroid.CENTER)
+            setCodeInput('')
             return
         }
 
@@ -209,6 +217,12 @@ const Entries = () => {
                         <Title style={paperStyles.title}>Finalizar Entrada</Title>
                         <Title>Productos: <Text>{entryProducts.length}</Text></Title>
                         <Title style={{marginBottom: 10}}>{`Total: $${new Intl.NumberFormat("en-US").format(entry.total)}`}</Title>
+                        <TextInput 
+                        label={'Observaciones'}
+                        style={{marginVertical: 10}}
+                        value={ entry.observations }
+                        onChange={ e => setEntry({...entry, observations: e.nativeEvent.text}) }
+                    />
                         <List.Accordion
                                 title={`Almacen`}
                                 expanded={expandedWarehouse}
@@ -259,7 +273,7 @@ const Entries = () => {
                                     /> 
                                     
                                     <IconButton icon='delete' size={24} color={colors.primaryColor} style={{flex: 1}} 
-                                        onPress={ () => null }
+                                        onPress={ () => handleDeleteProduct(product.code)}
                                     />
                                 </Card.Content>
                             </Card>

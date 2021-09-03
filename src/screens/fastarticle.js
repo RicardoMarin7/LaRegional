@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, SafeAreaView, ScrollView, ToastAndroid } from 'react-native'
 import { Title, TextInput, Button, List} from 'react-native-paper'
+import Sqlite from '../utils/Sqlite'
 import firestore from '../utils/firebase'
 import { size, map } from 'lodash'
 import useCloudContext from '../hooks/useCloudContext'
@@ -11,7 +12,7 @@ const FastArticle = () => {
     const [expandedTax, setExpandedTax] = useState(false);
     const [expandedLine, setExpandedLine] = useState(false);
     const [errors, setErrors] = useState(defaultValues());
-    const {lines} = useCloudContext()
+    const {lines, setProducts, products} = useCloudContext()
 
     const handleTaxChange = tax =>{
         setArticle({...article, tax: tax})
@@ -23,10 +24,77 @@ const FastArticle = () => {
         setExpandedLine(false)
     }
 
+    const saveArticleLocal = product =>{
+        try {
+            Sqlite.transaction( tx => {
+                tx.executeSql(`SELECT * FROM products WHERE code = ?`,
+                    [product.code],
+                    (tx, results) =>{
+                        if(results.rows.length > 0){
+                            console.log('Update')
+                            tx.executeSql(`UPDATE products SET 
+                                            description = ?, 
+                                            cost = ?, 
+                                            price = ?, 
+                                            tax = ?, 
+                                            line = ? WHERE code = ?`,
+                            [ product.description,
+                                product.cost,
+                                product.price,
+                                product.tax,
+                                product.line,
+                                product.code
+                            ],
+                            (tx, result) => null,
+                            error => console.log('Error', error))
+                    }else{
+                        tx.executeSql(`INSERT INTO products (code, description, cost, price, tax, line)
+                                    VALUES(?,?,?,?,?,?)`,
+                        [
+                            product.code,
+                            product.description,
+                            product.cost,
+                            product.price,
+                            product.tax,
+                            product.line
+                        ],
+                            (tx, result) => null,
+                            error => console.log(error))
+                        }
+                    },
+                  error => console.log(error) //Callback de error
+                )
+            })
+        } catch (error) {
+            console.log('Error', error)
+        }
+    }
+
     const saveArticleFirestore = async (article) =>{
         try {
-            const doc = firestore.collection('Productos').doc(article.code)
-            const response = await doc.set({...article, server: false, app: true})
+            
+            const devices = await firestore.collection('Dispositivos').get()
+            
+
+            devices.forEach( async (deviceData) => {
+                const device = deviceData.data()
+                const doc = firestore.collection(`Productos${device.id}`).doc(article.code.toUpperCase())
+                const response = await doc.set({...article,
+                    code:article.code.toUpperCase(),
+                    server: false, 
+                    app: false})
+                console.log(`Producto ${article.code.toUpperCase()} cargado en la nube del dispositivo ${device.id} `)
+            })
+
+            const doc = firestore.collection(`Productos`).doc(article.code.toUpperCase())
+            const response = await doc.set({...article,
+                code:article.code.toUpperCase(),
+                server: false, 
+                app: false
+            })
+
+            console.log(`Producto ${article.code} cargado a catalogo maestro`)
+
             ToastAndroid.showWithGravity(`Articulo ${article.code} guardado con éxito `, ToastAndroid.LONG, ToastAndroid.CENTER)
             setArticle(defaultValues())
         } catch (error) {
@@ -35,7 +103,7 @@ const FastArticle = () => {
         
     }
 
-    const handleCreateArticle = () =>{
+    const handleCreateArticle = async () =>{
         let errors = {}
         if(article.code === '' || article.description === '' || article.price === '' || article.cost === '' || article.tax === '' || article.line === ''){
             if(article.code === '') errors.code = true
@@ -71,6 +139,8 @@ const FastArticle = () => {
 
         setErrors(errors)
         saveArticleFirestore(article)
+        saveArticleLocal(article)
+        setProducts({...products, article})
     }
 
     return ( 

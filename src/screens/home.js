@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { View} from 'react-native'
 import { Button, Title, ActivityIndicator} from 'react-native-paper'
-import DeviceInfo from 'react-native-device-info'
 import useCloudContext from '../hooks/useCloudContext'
+import { BLEPrinter } from 'react-native-thermal-receipt-printer'
 import Sqlite from '../utils/Sqlite'
 
 const Home = ({navigation}) => {
     const { getLines, setLines, getProducts, setProducts, products, lines } = useCloudContext()
     const [loadingProducts, setLoadingProducts] = useState(true);
-    
+
     useEffect(async () => {
         await getProducts(false)
         Sqlite.transaction(tx => {
@@ -55,6 +55,15 @@ const Home = ({navigation}) => {
         console.log('Lines', lines);
     }, [lines]);
 
+    const printTest = async () =>{
+        try {
+            const init = BLEPrinter.printText('Hola Mundo', {})
+            console.log(init)            
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     if(loadingProducts){
         return(
             <View style={{flex:1, alignContent:"center", justifyContent:'center'}}> 
@@ -67,8 +76,8 @@ const Home = ({navigation}) => {
 
     return ( 
         <View>
-            <Button onPress={ () => navigation.navigate('fastarticle')} mode='contained'>
-                To Fast Articles
+            <Button onPress={printTest} mode='contained'>
+                Print
             </Button>
         </View>
     );
