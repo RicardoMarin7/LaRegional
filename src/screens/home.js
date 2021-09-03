@@ -7,15 +7,18 @@ import Sqlite from '../utils/Sqlite'
 const Home = ({navigation}) => {
     const { getLines, setLines, getProducts, setProducts, products, lines } = useCloudContext()
     const [loadingProducts, setLoadingProducts] = useState(true);
+    const [productsLength, setProductsLength] = useState(null);
+    const [linesLength, setLinesLength] = useState(null);
 
     useEffect(async () => {
         await getProducts(false)
-        Sqlite.transaction(tx => {
+
+        Sqlite.transaction( tx => {
             tx.executeSql(`SELECT * FROM PRODUCTS`,
             [],
             (tx, result) =>{
-                console.log('Result products local', result.rows.length)
                 let productTemp = []
+                setProductsLength(result.rows.length)
                 for (let i = 0; i < result.rows.length; i++) {
                     productTemp.push(result.rows.item(i))
                 }
@@ -23,23 +26,28 @@ const Home = ({navigation}) => {
             },
             error => console.log('Error', error))
         })
+
+        
+
         setLoadingProducts(false)
     }, []);
+
+    useEffect(async () => {
+        if(productsLength === null) return
+        if(productsLength < 1){
+            console.log('Products Local Empty')
+            await getProducts(true)
+        }
+    }, [productsLength]);
     
-    useEffect(() => {
-        console.log('Products', products);
-    }, [products]);
-
-
-
-    useEffect(() => {
-        getLines(false)
+    useEffect( async () => {
+        await getLines(false)
         Sqlite.transaction(tx => {
                 tx.executeSql(`SELECT * FROM LINES`,
                 [],
                 (tx, result) =>{
-                    let linesTemp = []
-                    if(result.rows.length < 1) getProducts(true)
+                    const linesTemp = []
+                    setLinesLength(result.rows.length)
                     for (let i = 0; i < result.rows.length; i++) {
                         linesTemp.push(result.rows.item(i))
                     }
@@ -49,11 +57,16 @@ const Home = ({navigation}) => {
             })
     }, []);
 
-    
-    useEffect(() => {
-        console.log('Lines', lines);
-    }, [lines]);
+    useEffect( async () => {
+        if(linesLength === null) return
+        if(linesLength < 1){
+            await getLines(true)
+        }
+    }, [linesLength]);
 
+    useEffect(() => {
+        console.log(products);
+    }, [products]);
 
     if(loadingProducts){
         return(

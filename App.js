@@ -41,7 +41,7 @@ const App = () => {
       console.log('Getting Lines')
       const response = await firestore.collection(`Lineas${DeviceInfo.getUniqueId()}`).limit(1).get()
       
-      if(response.empty){
+      if(response.empty || isLocalEmpty){
         data = await firestore.collection(`Lineas`).get()
       }else{
         data = await firestore.collection(`Lineas${DeviceInfo.getUniqueId()}`).where('app', '==', false).get()
@@ -52,9 +52,14 @@ const App = () => {
         return
       }
 
+      const linesTemp = []
+
       data.forEach( async (lineData) =>{
         const line = lineData.data()
-        console.log('line', line)
+        linesTemp.push(line)
+      })
+
+      for( const line of linesTemp ){
         Sqlite.transaction( tx => {
           tx.executeSql(`SELECT * FROM lines WHERE line = ?`,
             [line.line],
@@ -95,7 +100,13 @@ const App = () => {
             error => console.log(error) //Callback de error
           )
         })
-      })
+      }
+
+      if(isLocalEmpty){
+        await setLinesToState()
+      }
+
+      return true
     } catch (error) {
       console.log('Error', error)
       ToastAndroid.showWithGravity(error.toString(), ToastAndroid.LONG, ToastAndroid.CENTER)
@@ -104,6 +115,7 @@ const App = () => {
 
   const getProducts = async (isLocalEmpty) => {
     try {
+      console.log('Products LocalEmpty', isLocalEmpty)
       let data
       console.log('Getting Products')
       const response = await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`).limit(1).get()
@@ -117,9 +129,15 @@ const App = () => {
       if(data.empty){
         console.log('No hay productos por descargar')
       }
+
+      const productsTemp = []
       
       data.forEach( async (productData) =>{
         const product = productData.data()
+        productsTemp.push(product)
+      })
+
+      for( const product of productsTemp ){
         Sqlite.transaction( tx => {
           tx.executeSql(`SELECT * FROM products WHERE code = ?`,
             [product.code],
@@ -172,11 +190,48 @@ const App = () => {
             error => console.log(error) //Callback de error
           )
         })
-      })
+      }
+
+      if(isLocalEmpty){
+        await setProductsToState()
+      }
+
+      return true
     } catch (error) {
       ToastAndroid.showWithGravity(error.toString(), ToastAndroid.LONG, ToastAndroid.CENTER)
       console.log(error)
     }
+  }
+
+  const setLinesToState = async () =>{
+    await Sqlite.transaction(tx => {
+      tx.executeSql(`SELECT * FROM LINES`,
+      [],
+      (tx, result) =>{
+          let linesTemp = []
+          for (let i = 0; i < result.rows.length; i++) {
+              linesTemp.push(result.rows.item(i))
+          }
+          setLines(linesTemp)
+      },
+      error => console.log('Error', error))
+    })
+  }
+
+  const setProductsToState = async () =>{
+    await Sqlite.transaction( tx => {
+      tx.executeSql(`SELECT * FROM PRODUCTS`,
+      [],
+      (tx, result) =>{
+          const productTemp = []
+          setProductsLength(result.rows.length)
+          for (let i = 0; i < result.rows.length; i++) {
+              productTemp.push(result.rows.item(i))
+          }
+          setProducts(productTemp)
+      },
+      error => console.log('Error', error))
+    })
   }
 
   useEffect(() => {
@@ -200,33 +255,12 @@ const App = () => {
 
 
 
-  // useEffect(() => {
-  //   (async () =>{
-  //     const response = (await firestore.collection('Lineas').get()).docs
-  //     const lines = response.map( line => (
-  //         line.data()
-  //     ))
-  //     setLines(lines)
-  //   })()
-  // }, []);
-
-  // useEffect(() => {
-  //   (async () =>{
-  //     const response = (await firestore.collection('Usuarios').get()).docs
-  //     const users = response.map( user => (
-  //         user.data()
-  //     ))
-  //     setUsers(users)
-  //   })()
-  // }, []);
-
-
   const cloudContext = useMemo(
     () =>({
     lines: lines,
     products: products,
     getLines,
-    getProducts,
+    getProducts: (isLocalEmpty) => getProducts(isLocalEmpty),
     setLines,
     setProducts
   }), [lines, products])

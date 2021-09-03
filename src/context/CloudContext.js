@@ -4,9 +4,9 @@ const CloudContext = createContext({
     lines: [],
     products: [],
     getLines: () => null,
-    getProducts: () => null,
+    getProducts: (isLocalEmpty) => null,
     setLines:() => null,
-    setProducts: () => null
+    setProducts: (isLocalEmpty) => null
 })
 
 export default CloudContext
