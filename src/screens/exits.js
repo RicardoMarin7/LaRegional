@@ -128,7 +128,6 @@ const Exits = () => {
                 exitProductsTemp.push({...exitProducts[i], [parameter]: value})
             }
         }
-        console.log(exitProductsTemp)
         setExitProducts(exitProductsTemp)
     }
 
