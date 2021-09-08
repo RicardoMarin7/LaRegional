@@ -5,10 +5,11 @@ import useCloudContext from '../hooks/useCloudContext'
 import Sqlite from '../utils/Sqlite'
 
 const Home = ({navigation}) => {
-    const { getLines, setLines, getProducts, setProducts, products, lines } = useCloudContext()
+    const { getLines, setLines, getProducts, setProducts, getProviders, setProviders, providers } = useCloudContext()
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [productsLength, setProductsLength] = useState(null);
     const [linesLength, setLinesLength] = useState(null);
+    const [providersLength, setProvidersLength] = useState(null);
 
     useEffect(async () => {
         await getProducts(false)
@@ -26,8 +27,6 @@ const Home = ({navigation}) => {
             },
             error => console.log('Error', error))
         })
-
-        
 
         setLoadingProducts(false)
     }, []);
@@ -64,9 +63,34 @@ const Home = ({navigation}) => {
         }
     }, [linesLength]);
 
+    useEffect( async () => {
+        await getProviders(false)
+        Sqlite.transaction(tx => {
+                tx.executeSql(`SELECT * FROM PROVIDERS`,
+                [],
+                (tx, result) =>{
+                    const providersTemp = []
+                    setProvidersLength(result.rows.length)
+                    for (let i = 0; i < result.rows.length; i++) {
+                        providersTemp.push(result.rows.item(i))
+                    }
+                    setProviders(providersTemp)
+                },
+                error => console.log('Error', error))
+            })
+    }, []);
+
+    useEffect( async () => {
+        if(providersLength === null) return
+        if(providersLength < 1){
+            await getProviders(true)
+        }
+    }, [providersLength]);
+
     useEffect(() => {
-        console.log(products);
-    }, [products]);
+        console.log(providers)
+    }, [providers]);
+
 
     if(loadingProducts){
         return(

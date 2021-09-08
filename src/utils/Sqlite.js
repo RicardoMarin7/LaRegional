@@ -34,6 +34,15 @@ Sqlite.transaction(tx => {
     error => console.log('Error', error))
 })
 
+Sqlite.transaction(tx => {
+    tx.executeSql(`CREATE TABLE IF NOT EXISTS PROVIDERS (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    provider TEXT UNIQUE,
+                    name TEXT)`,
+    [],
+    (tx, result) => null,
+    error => console.log('Error', error))
+})
+
 
 
 

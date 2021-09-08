@@ -3,10 +3,13 @@ import { createContext } from 'react'
 const CloudContext = createContext({
     lines: [],
     products: [],
-    getLines: () => null,
+    providers: [],
+    getProviders: () => null,
+    setProviders: () => null,
     getProducts: (isLocalEmpty) => null,
+    setProducts: (isLocalEmpty) => null,
+    getLines: () => null,
     setLines:() => null,
-    setProducts: (isLocalEmpty) => null
 })
 
 export default CloudContext

@@ -21,6 +21,7 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [lines, setLines] = useState([])
+  const [providers, setProviders] = useState([]);
 
   const primaryColor = '#f04e60'
   const secondaryColor = '#d04959'
@@ -203,6 +204,98 @@ const App = () => {
     }
   }
 
+  const getProviders = async (isLocalEmpty) =>{
+    try {
+      let data
+      console.log('Getting Providers')
+      const response = await firestore.collection(`Proveedores${DeviceInfo.getUniqueId()}`).limit(1).get()
+      if(response.empty || isLocalEmpty){
+        data = await firestore.collection(`Proveedores`).get()
+      }else{
+        data = await firestore.collection(`Proveedores${DeviceInfo.getUniqueId()}`).where('app', '==', false).get()
+      }
+
+      if(data.empty){
+        console.log('No hay Proveedores por descargar')
+        return
+      }
+
+      const providersTemp = []
+
+      data.forEach( async (providerData) =>{
+        const provider = providerData.data()
+        providersTemp.push(provider)
+      })
+
+      for( const provider of providersTemp ){
+        Sqlite.transaction( tx => {
+          tx.executeSql(`SELECT * FROM providers WHERE provider = ?`,
+            [provider.provider],
+            (tx, results) =>{
+              if(results.rows.length > 0){
+                console.log('Update')
+                tx.executeSql(`UPDATE providers SET 
+                              name = ? 
+                              WHERE provider = ?`,
+                [ provider.name,
+                  provider.provider
+                ],
+                async (tx, result) => {
+                  await firestore.collection(`Proveedores${DeviceInfo.getUniqueId()}`).doc(provider.provider).set({
+                    ...provider,
+                    app: true
+                  }, {merge: true})
+                  console.log('Proveedor actualizado con exito', provider.provider )
+                },
+                error => console.log('Error', error))
+              }else{
+                tx.executeSql(`INSERT INTO providers (provider, name)
+                              VALUES(?,?)`,
+                [
+                  provider.provider,
+                  provider.name
+                ],
+                async (tx, result) => {
+                  await firestore.collection(`Proveedores${DeviceInfo.getUniqueId()}`).doc(provider.provider).set({
+                    ...provider,
+                    app: true
+                  }, {merge: true})
+                  console.log('Proveedor guardado con exito', provider.provider )
+                },
+                error => console.log('error'))
+              }
+            },
+            error => console.log(error) //Callback de error
+          )
+        })
+      }
+
+      if(isLocalEmpty){
+        await setProvidersToState()
+      }
+
+      return true
+    } catch (error) {
+      console.log('Error', error)
+      ToastAndroid.showWithGravity(error.toString(), ToastAndroid.LONG, ToastAndroid.CENTER)
+    }
+  }
+
+  const setProvidersToState = async () =>{
+    await Sqlite.transaction(tx => {
+      tx.executeSql(`SELECT * FROM PROVIDERS`,
+      [],
+      (tx, result) =>{
+          let providersTemp = []
+          for (let i = 0; i < result.rows.length; i++) {
+              providersTemp.push(result.rows.item(i))
+          }
+          setProviders(providersTemp)
+      },
+      error => console.log('Error', error))
+    })
+  }
+
   const setLinesToState = async () =>{
     await Sqlite.transaction(tx => {
       tx.executeSql(`SELECT * FROM LINES`,
@@ -234,6 +327,8 @@ const App = () => {
     })
   }
 
+
+
   useEffect(() => {
     (async () =>{
         try {
@@ -259,11 +354,14 @@ const App = () => {
     () =>({
     lines: lines,
     products: products,
+    providers: providers,
     getLines,
+    getProviders,
+    setProviders,
     getProducts: (isLocalEmpty) => getProducts(isLocalEmpty),
     setLines,
     setProducts
-  }), [lines, products])
+  }), [lines, products, providers])
 
   const preferencesContext = useMemo(
     () =>({
