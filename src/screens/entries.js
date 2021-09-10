@@ -218,11 +218,11 @@ const Entries = () => {
                         <Title>Productos: <Text>{entryProducts.length}</Text></Title>
                         <Title style={{marginBottom: 10}}>{`Total: $${new Intl.NumberFormat("en-US").format(entry.total)}`}</Title>
                         <TextInput 
-                        label={'Observaciones'}
-                        style={{marginVertical: 10}}
-                        value={ entry.observations }
-                        onChange={ e => setEntry({...entry, observations: e.nativeEvent.text}) }
-                    />
+                            label={'Observaciones'}
+                            style={{marginVertical: 10}}
+                            value={ entry.observations }
+                            onChange={ e => setEntry({...entry, observations: e.nativeEvent.text}) }
+                        />
                         <List.Accordion
                                 title={`Almacen`}
                                 expanded={expandedWarehouse}

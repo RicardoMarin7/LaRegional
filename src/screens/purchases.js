@@ -10,7 +10,7 @@ import firestore from '../utils/firebase'
 
 const Purchases = () => {
     const date = new Date()
-    const { products } = useCloudContext()
+    const { products, providers } = useCloudContext()
     const colors = usePreferencesContext()
     const { user } = usePreferencesContext()
 
@@ -19,6 +19,7 @@ const Purchases = () => {
     const [codeInput, setCodeInput] = useState('')
     const [filtered, setFiltered] = useState(purchaseProducts)
     const [expandedWarehouse, setExpandedWarehouse] = useState(false);
+    const [expandedProvider, setExpandedProvider] = useState(null);
     const [purchase, setPurchase] = useState({
         total: 0,
         warehouse: null,
@@ -80,6 +81,7 @@ const Purchases = () => {
 
             setPurchase({
                 total: 0,
+                provider: null,
                 warehouse: null,
                 date: `${date.getDate()}-${date.getMonth()+1}-${date.getUTCFullYear()}`
             })
@@ -222,6 +224,12 @@ const Purchases = () => {
                         <Title style={paperStyles.title}>Finalizar Compra</Title>
                         <Title>Productos: <Text>{purchaseProducts.length}</Text></Title>
                         <Title style={{marginBottom: 10}}>{`Total: $${new Intl.NumberFormat("en-US").format(purchase.total)}`}</Title>
+                        <TextInput 
+                            label={'Observaciones'}
+                            style={{marginVertical: 10}}
+                            value={ purchase.observations }
+                            onChange={ e => setEntry({...purchase, observations: e.nativeEvent.text}) }
+                        />
                         <List.Accordion
                                 title={`Almacen`}
                                 expanded={expandedWarehouse}
@@ -230,6 +238,17 @@ const Purchases = () => {
                             >
                                 <List.Item title="Almacen 1" description='Matriz' onPress={() => {setPurchase({...purchase, warehouse: 1}); setExpandedWarehouse(false);}}/>
                                 <List.Item title="Almacen 2" description='Sucursal' onPress={() => {setPurchase({...purchase, warehouse: 2}); setExpandedWarehouse(false);}}/>
+                        </List.Accordion>
+
+                        <List.Accordion
+                                title={`Proveedor`}
+                                expanded={expandedProvider}
+                                onPress={ () => setExpandedProvider(!expandedProvider)}
+                                description={!purchase.provider ? 'Seleccionar proveedor' : purchase.provider}
+                            >
+                                {providers.map( provider => (
+                                    <List.Item key={provider.provider} title={provider.provider} description={provider.name} onPress={() => {setPurchase({...purchase, provider: provider.provider}); setExpandedProvider(false);}}/>
+                                ))}
                         </List.Accordion>
                         
                         <View style={{flexDirection: 'row', marginTop: 20}}>

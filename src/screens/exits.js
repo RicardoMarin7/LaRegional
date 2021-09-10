@@ -220,6 +220,12 @@ const Exits = () => {
                         <Title style={paperStyles.title}>Finalizar Salida</Title>
                         <Title>Productos: <Text>{exitProducts.length}</Text></Title>
                         <Title style={{marginBottom: 10}}>{`Total: $${new Intl.NumberFormat("en-US").format(exit.total)}`}</Title>
+                        <TextInput 
+                            label={'Observaciones'}
+                            style={{marginVertical: 10}}
+                            value={ exit.observations }
+                            onChange={ e => setExit({...exit, observations: e.nativeEvent.text}) }
+                        />
                         <List.Accordion
                                 title={`Almacen`}
                                 expanded={expandedWarehouse}
