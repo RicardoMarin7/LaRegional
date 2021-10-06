@@ -41,9 +41,9 @@ const PrinterDevices = ({setPrinterConnected}) => {
 
     if(devices === null){
         return(
-            <View style={{flex:1, alignContent:"center", justifyContent:'center'}}> 
-                <ActivityIndicator animating={true} size={72} />
+            <View style={{alignContent:"center", justifyContent:'center'}}> 
                 <Title style={{textAlign:'center', color:'white'}}>Cargando Dispositivos Bluetooth</Title>
+                <ActivityIndicator animating={true} size={72} />
             </View>
         )
     }

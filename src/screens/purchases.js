@@ -7,6 +7,7 @@ import useCloudContext from '../hooks/useCloudContext'
 import { size, map, find, filter} from 'lodash'
 import SearchBar from '../components/SearchBar'
 import firestore from '../utils/firebase'
+import Printer from '../components/Printer'
 
 const Purchases = () => {
     const date = new Date()
@@ -26,6 +27,9 @@ const Purchases = () => {
         date: `${date.getDate()}-${date.getMonth()+1}-${date.getUTCFullYear()}`,
         provider: null
     });
+    const [provider, setProvider] = useState();
+    const [print, setPrint] = useState(false)
+    const [printData, setPrintData] = useState(null);
 
     useEffect(() => {
         setFiltered(purchaseProducts)
@@ -78,6 +82,18 @@ const Purchases = () => {
             await firestore.collection('Folios').doc('Compras').set({folio})
 
             ToastAndroid.showWithGravity(`Compra guardada con éxito folio: ${folio}`, ToastAndroid.SHORT, ToastAndroid.CENTER)
+
+            setPrintData({
+                ...purchase,
+                type:'Compra',
+                deviceName,
+                deviceUniqueID,
+                user: user.user,
+                server: false,
+                providerName: provider.name,
+                time: `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+            })
+            setPrint(true)
 
             setPurchase({
                 total: 0,
@@ -247,7 +263,7 @@ const Purchases = () => {
                                 description={!purchase.provider ? 'Seleccionar proveedor' : purchase.provider}
                             >
                                 {providers.map( provider => (
-                                    <List.Item key={provider.provider} title={provider.provider} description={provider.name} onPress={() => {setPurchase({...purchase, provider: provider.provider}); setExpandedProvider(false);}}/>
+                                    <List.Item key={provider.provider} title={provider.provider} description={provider.name} onPress={() => {setPurchase({...purchase, provider: provider.provider}); setExpandedProvider(false); setProvider(provider)}}/>
                                 ))}
                         </List.Accordion>
                         
@@ -301,6 +317,8 @@ const Purchases = () => {
                     <Title style={{fontSize: 16, flex: 3}}>{`Total: $${new Intl.NumberFormat("en-US").format(purchase.total)}`}</Title>
                     <Button style={{flex:1}} mode='contained' onPress={handleNextStep}>Siguiente</Button>
                 </View>
+
+                <Printer setVisible={setPrint} visible={print} data={printData} />
         </SafeAreaView>
     );
 }

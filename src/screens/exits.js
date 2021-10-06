@@ -7,6 +7,7 @@ import useCloudContext from '../hooks/useCloudContext'
 import { size, map, find, filter} from 'lodash'
 import SearchBar from '../components/SearchBar'
 import firestore from '../utils/firebase'
+import Printer from '../components/Printer'
 
 const Exits = () => {
     const date = new Date()
@@ -24,6 +25,8 @@ const Exits = () => {
         warehouse: null,
         date: `${date.getDate()}-${date.getMonth()+1}-${date.getUTCFullYear()}`
     });
+    const [print, setPrint] = useState(false)
+    const [printData, setPrintData] = useState(null);
 
     useEffect(() => {
         setFiltered(exitProducts)
@@ -72,6 +75,17 @@ const Exits = () => {
             await firestore.collection('Folios').doc('Salidas').set({folio})
 
             ToastAndroid.showWithGravity(`Salida guardada con éxito folio: ${folio}`, ToastAndroid.SHORT, ToastAndroid.CENTER)
+
+            setPrintData({
+                ...exit,
+                type:'Salida',
+                deviceName,
+                deviceUniqueID,
+                user: user.user,
+                server: false,
+                time: `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+            })
+            setPrint(true)
 
             setExit({
                 total: 0,
@@ -287,6 +301,8 @@ const Exits = () => {
                     <Title style={{fontSize: 16, flex: 3}}>{`Total: $${new Intl.NumberFormat("en-US").format(exit.total)}`}</Title>
                     <Button style={{flex:1}} mode='contained' onPress={handleNextStep}>Siguiente</Button>
                 </View>
+
+                <Printer setVisible={setPrint} visible={print} data={printData} />
         </SafeAreaView>
     );
 }

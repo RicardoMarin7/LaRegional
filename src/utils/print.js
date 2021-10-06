@@ -24,6 +24,8 @@ export const printData = async (data) =>{
 
     const productColumnWidths = [12, 23, 6, 6]
     const productColumnAligns = [BluetoothPrinter.ALIGN.LEFT, BluetoothPrinter.ALIGN.LEFT, BluetoothPrinter.ALIGN.RIGHT, BluetoothPrinter.ALIGN.RIGHT]
+    const totalColumnWidth = [47]
+    const totalColumnAlign = [BluetoothPrinter.ALIGN.RIGHT]
 
     try {
         await BluetoothPrinter.printerAlign(BluetoothPrinter.ALIGN.CENTER)
@@ -32,6 +34,9 @@ export const printData = async (data) =>{
         await BluetoothPrinter.printText( `Fecha: ${data.date} Hora:${data.time} \r\n`, subtitle);
         await BluetoothPrinter.printText( `Usuario: ${data.user} \r\n`, subtitle);
         await BluetoothPrinter.printText( `Dispositivo:${data.deviceName} \r\n`, subtitle);
+        if(data?.provider){
+            await BluetoothPrinter.printText( `Proveedor:${data.provider} ${data.providerName} \r\n`, subtitle);
+        }
         await BluetoothPrinter.printText("------------------------------------------------\r\n", {});
         await BluetoothPrinter.printText("Articulo    Descripcion              Qty   Costo\r\n", {});
         await BluetoothPrinter.printText("------------------------------------------------\r\n", {});
@@ -40,11 +45,21 @@ export const printData = async (data) =>{
             await BluetoothPrinter.printColumn(
                 productColumnWidths,
                 productColumnAligns,
-                [`${product?.code}`, `${product?.description}`, `${product?.quantity}`, `$${product?.cost}`],
+                [`${product?.code}`, `${product?.description}`, `${product?.quantity}`, `$${new Intl.NumberFormat("en-US").format(product?.cost)}`],
                 {}
             )
             await BluetoothPrinter.printText( `\r\n`, subtitle);
         }
+
+        await BluetoothPrinter.printColumn(
+            totalColumnWidth,
+            totalColumnAlign,
+            [`Total: $${new Intl.NumberFormat("en-US").format(data?.total)}`],
+            {}
+        )
+        await BluetoothPrinter.printText( `\r\n`, subtitle);
+
+        await BluetoothPrinter.printText("------------------------------------------------\r\n", {});
         await BluetoothPrinter.printText( `Observaciones: ${data.observations} \r\n`, subtitle);
 
 

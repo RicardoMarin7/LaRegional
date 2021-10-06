@@ -9,26 +9,26 @@ const PrintData = ({data, setVisible}) => {
     }
 
     return (
-        <View
-        style={{flexDirection:'row'}}
-        >
-            {/* <Title style={{textAlign:'center'}}>¿Desea imprimir?</Title> */}
-            <Button
-                style={{flex:2, marginHorizontal: 10}}
-                dark
-                mode='outlined'
-                onPress={ () => setVisible(false)}
-            >
-                No
-            </Button>
-            <Button
-                style={{flex:2, marginHorizontal: 10}}
-                dark
-                mode='contained'
-                onPress={ () => printOnBluetoothPrinter(data)}
-            >
-                Si
-            </Button>
+        <View>
+            <Title style={{textAlign:'center'}}>¿Desea imprimir?</Title>
+            <View style={{flexDirection:'row'}}>
+                <Button
+                    style={{flex:2, marginHorizontal: 10}}
+                    dark
+                    mode='outlined'
+                    onPress={ () => setVisible(false)}
+                >
+                    No
+                </Button>
+                <Button
+                    style={{flex:2, marginHorizontal: 10}}
+                    dark
+                    mode='contained'
+                    onPress={ () => printOnBluetoothPrinter(data)}
+                >
+                    Si
+                </Button>
+            </View>
         </View>
     );
 }
