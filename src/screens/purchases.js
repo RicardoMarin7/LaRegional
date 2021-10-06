@@ -228,7 +228,7 @@ const Purchases = () => {
                             label={'Observaciones'}
                             style={{marginVertical: 10}}
                             value={ purchase.observations }
-                            onChange={ e => setEntry({...purchase, observations: e.nativeEvent.text}) }
+                            onChange={ e => setPurchase({...purchase, observations: e.nativeEvent.text}) }
                         />
                         <List.Accordion
                                 title={`Almacen`}

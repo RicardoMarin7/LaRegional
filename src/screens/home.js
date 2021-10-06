@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { View} from 'react-native'
-import { Button, Title, ActivityIndicator} from 'react-native-paper'
+import { Button, Title, ActivityIndicator, } from 'react-native-paper'
+import PrinterMain from '../components/Printer/PrinterMain'
 import useCloudContext from '../hooks/useCloudContext'
 import Sqlite from '../utils/Sqlite'
 
@@ -10,6 +11,8 @@ const Home = ({navigation}) => {
     const [productsLength, setProductsLength] = useState(null);
     const [linesLength, setLinesLength] = useState(null);
     const [providersLength, setProvidersLength] = useState(null);
+
+    const [printer, setPrinter] = useState(false);
 
     useEffect(async () => {
         await getProducts(false)
@@ -91,10 +94,9 @@ const Home = ({navigation}) => {
         console.log(providers)
     }, [providers]);
 
-
     if(loadingProducts){
         return(
-            <View style={{flex:1, alignContent:"center", justifyContent:'center'}}> 
+            <View style={{alignContent:"center", justifyContent:'center'}}> 
                 <ActivityIndicator animating={true} size={72} />
                 <Title style={{textAlign:'center'}}>Cargando Productos</Title>
                 <Title style={{textAlign:'center'}}>No cierres la aplicación</Title>
@@ -104,9 +106,17 @@ const Home = ({navigation}) => {
 
     return ( 
         <View>
-            <Button onPress={() => 'Log'} mode='contained'>
-                Print
+            <Button 
+                mode="contained" 
+                onPress={() => setPrinter(true)}
+                >
+                Print Something
             </Button>
+
+            <PrinterMain 
+                visible={printer}
+                setVisible={setPrinter}
+            />
         </View>
     );
 }
