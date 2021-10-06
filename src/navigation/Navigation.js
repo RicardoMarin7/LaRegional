@@ -1,6 +1,5 @@
 import React from 'react'
-import { createStackNavigator } from '@react-navigation/stack'
-import Home from '../screens/home'
+import Home from '../navigation/HomeStack'
 import Exits from '../screens/exits'
 import Entries from '../screens/entries'
 import Purchases from '../screens/purchases'
@@ -8,7 +7,6 @@ import FastArticle from '../screens/fastarticle'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { IconButton } from 'react-native-paper'
 
-// const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
 
 const Navigation = () => {
@@ -52,8 +50,6 @@ const Navigation = () => {
             
             
         >
-
-
             <Tab.Screen name='home' component={Home} options={{title: 'Home'}}/>
             <Tab.Screen name='exits' component={Exits} options={{title: 'Salidas'}}/>
             <Tab.Screen name='entries' component={Entries} options={{title: 'Entradas'}}/>

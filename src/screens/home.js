@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { View} from 'react-native'
-import { Button, Title, ActivityIndicator, } from 'react-native-paper'
-import PrinterMain from '../components/Printer/PrinterMain'
+import { ScrollView, View} from 'react-native'
+import { Title, ActivityIndicator, } from 'react-native-paper'
+import MainButton from '../components/MainButton'
 import useCloudContext from '../hooks/useCloudContext'
 import Sqlite from '../utils/Sqlite'
 
@@ -11,8 +11,6 @@ const Home = ({navigation}) => {
     const [productsLength, setProductsLength] = useState(null);
     const [linesLength, setLinesLength] = useState(null);
     const [providersLength, setProvidersLength] = useState(null);
-
-    const [printer, setPrinter] = useState(false);
 
     useEffect(async () => {
         await getProducts(false)
@@ -105,19 +103,10 @@ const Home = ({navigation}) => {
     }
 
     return ( 
-        <View>
-            <Button 
-                mode="contained" 
-                onPress={() => setPrinter(true)}
-                >
-                Print Something
-            </Button>
-
-            <PrinterMain 
-                visible={printer}
-                setVisible={setPrinter}
-            />
-        </View>
+        <ScrollView contentContainerStyle={{justifyContent: 'center', flexWrap: 'wrap', flexDirection:'row'}}>
+            <MainButton title='Existencia de Productos' execute={() => navigation.navigate('existence')} />
+            <MainButton title='Actualizar Contenido' />
+        </ScrollView>
     );
 }
 
