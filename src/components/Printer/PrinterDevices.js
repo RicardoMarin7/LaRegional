@@ -4,7 +4,7 @@ import { Button, Title, ActivityIndicator } from 'react-native-paper'
 import { scanDevices, connect } from '../../utils/print'
 import { map, size } from 'lodash'
 
-const PrinterDevices = ({setPrinterConnected}) => {
+const PrinterDevices = ({setPrinterConnected, setVisible}) => {
     const [devices, setDevices] = useState(null);
     const [enabledDevices, setEnabledDevices] = useState(true);
 
@@ -65,6 +65,16 @@ const PrinterDevices = ({setPrinterConnected}) => {
                     </Button>
                 ))
             )}
+
+            <Button
+                mode='outlined'
+                compact
+                dark
+                key={'close'}
+                onPress={() => setVisible(false) }
+            >
+                Cerrar
+            </Button>
         </ScrollView>
     );
 }

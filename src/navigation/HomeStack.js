@@ -9,7 +9,7 @@ const HomeStack = () => {
     return (
         <Stack.Navigator>
             <Stack.Screen name='home' component={Home} options={{title: 'Home'}} />
-            <Stack.Screen name='existence' component={Existence} options={{title: 'Existence'}} />
+            <Stack.Screen name='existence' component={Existence} options={{title: 'Existencia'}} />
         </Stack.Navigator>
     )
 }

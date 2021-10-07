@@ -27,7 +27,7 @@ const PrinterMain = ({ visible, setVisible, data}) => {
                 visible={visible}
                 dismissable={false}
             >  
-                { printerConnected ? <PrintData setVisible={setVisible} data={data} /> : <PrinterDevices setPrinterConnected={setprinterConnected} />}
+                { printerConnected ? <PrintData setVisible={setVisible} data={data} /> : <PrinterDevices setPrinterConnected={setprinterConnected} setVisible={setVisible}/>}
             </Modal>
         </Portal>
     );
