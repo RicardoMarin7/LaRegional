@@ -6,15 +6,53 @@ import useCloudContext from '../hooks/useCloudContext'
 import Sqlite from '../utils/Sqlite'
 
 const Home = ({navigation}) => {
-    const { getLines, setLines, getProducts, setProducts, getProviders, setProviders, providers } = useCloudContext()
+    const { getLines, setLines, getProducts, setProducts, getProviders, setProviders, providers, setProductsToState } = useCloudContext()
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [productsLength, setProductsLength] = useState(null);
     const [linesLength, setLinesLength] = useState(null);
     const [providersLength, setProvidersLength] = useState(null);
 
     useEffect(async () => {
-        await getProducts(false)
+        await updateProducts()
+        setLoadingProducts(false)
+    }, []);
 
+    useEffect(async () => {
+        if(productsLength === null) return
+        if(productsLength < 1){
+            console.log('Products Local Empty')
+            await getProducts(true)
+        }
+    }, [productsLength]);
+    
+    useEffect( async () => {
+        await updateLines()
+    }, []);
+
+    useEffect( async () => {
+        if(linesLength === null) return
+        if(linesLength < 1){
+            await getLines(true)
+        }
+    }, [linesLength]);
+
+    useEffect( async () => {
+        await updateProviders()
+    }, []);
+
+    useEffect( async () => {
+        if(providersLength === null) return
+        if(providersLength < 1){
+            await getProviders(true)
+        }
+    }, [providersLength]);
+
+    useEffect(() => {
+        console.log(providers)
+    }, [providers]);
+
+    const updateProducts = async () =>{
+        await getProducts(false)
         Sqlite.transaction( tx => {
             tx.executeSql(`SELECT * FROM PRODUCTS`,
             [],
@@ -28,43 +66,9 @@ const Home = ({navigation}) => {
             },
             error => console.log('Error', error))
         })
+    }
 
-        setLoadingProducts(false)
-    }, []);
-
-    useEffect(async () => {
-        if(productsLength === null) return
-        if(productsLength < 1){
-            console.log('Products Local Empty')
-            await getProducts(true)
-        }
-    }, [productsLength]);
-    
-    useEffect( async () => {
-        await getLines(false)
-        Sqlite.transaction(tx => {
-                tx.executeSql(`SELECT * FROM LINES`,
-                [],
-                (tx, result) =>{
-                    const linesTemp = []
-                    setLinesLength(result.rows.length)
-                    for (let i = 0; i < result.rows.length; i++) {
-                        linesTemp.push(result.rows.item(i))
-                    }
-                    setLines(linesTemp)
-                },
-                error => console.log('Error', error))
-            })
-    }, []);
-
-    useEffect( async () => {
-        if(linesLength === null) return
-        if(linesLength < 1){
-            await getLines(true)
-        }
-    }, [linesLength]);
-
-    useEffect( async () => {
+    const updateProviders = async () =>{
         await getProviders(false)
         Sqlite.transaction(tx => {
                 tx.executeSql(`SELECT * FROM PROVIDERS`,
@@ -79,18 +83,24 @@ const Home = ({navigation}) => {
                 },
                 error => console.log('Error', error))
             })
-    }, []);
+    }
 
-    useEffect( async () => {
-        if(providersLength === null) return
-        if(providersLength < 1){
-            await getProviders(true)
-        }
-    }, [providersLength]);
-
-    useEffect(() => {
-        console.log(providers)
-    }, [providers]);
+    const updateLines = async () => {
+        await getLines(false)
+        Sqlite.transaction(tx => {
+                tx.executeSql(`SELECT * FROM LINES`,
+                [],
+                (tx, result) =>{
+                    const linesTemp = []
+                    setLinesLength(result.rows.length)
+                    for (let i = 0; i < result.rows.length; i++) {
+                        linesTemp.push(result.rows.item(i))
+                    }
+                    setLines(linesTemp)
+                },
+                error => console.log('Error', error))
+            })
+    }
 
     if(loadingProducts){
         return(
@@ -104,8 +114,11 @@ const Home = ({navigation}) => {
 
     return ( 
         <ScrollView contentContainerStyle={{justifyContent: 'center', flexWrap: 'wrap', flexDirection:'row'}}>
-            <MainButton title='Existencia de Productos' execute={() => navigation.navigate('existence')} />
-            <MainButton title='Actualizar Contenido' />
+            <MainButton title='Existencia Almacen 1' icon='package' execute={() => navigation.navigate('existence')} />
+            <MainButton title='Existencia Almacen 2' icon='package' execute={() => navigation.navigate('existence2')} />
+            <MainButton title='Actualizar Productos' icon='update' execute={() => updateProducts()} />
+            <MainButton title='Actualizar Proveedores' icon='update' execute={() => updateProviders()} />
+            <MainButton title='Actualizar Lineas' icon='update' execute={() => updateLines()} />
         </ScrollView>
     );
 }

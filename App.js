@@ -102,10 +102,9 @@ const App = () => {
           )
         })
       }
+      
+      await setLinesToState()
 
-      if(isLocalEmpty){
-        await setLinesToState()
-      }
 
       return true
     } catch (error) {
@@ -150,13 +149,15 @@ const App = () => {
                               cost = ?, 
                               price = ?, 
                               tax = ?, 
-                              line = ? WHERE code = ?`,
+                              line = ?, warehouse1 = ?, warehouse2 = ? WHERE code = ?`,
                 [ product.description,
                   product.cost,
                   product.price,
                   product.tax,
                   product.line,
-                  product.code
+                  product.warehouse1,
+                  product.warehouse2,
+                  product.code,
                 ],
                 async (tx, result) => {
                   await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`).doc(product.code).set({
@@ -167,15 +168,17 @@ const App = () => {
                 },
                 error => console.log('Error', error))
               }else{
-                tx.executeSql(`INSERT INTO products (code, description, cost, price, tax, line)
-                              VALUES(?,?,?,?,?,?)`,
+                tx.executeSql(`INSERT INTO products (code, description, cost, price, tax, line, warehouse1, warehouse2)
+                              VALUES(?,?,?,?,?,?,?,?)`,
                 [
                   product.code,
                   product.description,
                   product.cost,
                   product.price,
                   product.tax,
-                  product.line
+                  product.line,
+                  product.warehouse1,
+                  product.warehouse2
                 ],
                 async (tx, result) => {
                   await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`
@@ -193,9 +196,7 @@ const App = () => {
         })
       }
 
-      if(isLocalEmpty){
-        await setProductsToState()
-      }
+      await setProductsToState()
 
       return true
     } catch (error) {
@@ -262,17 +263,16 @@ const App = () => {
                   }, {merge: true})
                   console.log('Proveedor guardado con exito', provider.provider )
                 },
-                error => console.log('error'))
+                error => console.log(error))
               }
             },
             error => console.log(error) //Callback de error
           )
         })
       }
+      
+      await setProvidersToState()
 
-      if(isLocalEmpty){
-        await setProvidersToState()
-      }
 
       return true
     } catch (error) {
@@ -311,20 +311,20 @@ const App = () => {
     })
   }
 
-  const setProductsToState = async () =>{
-    await Sqlite.transaction( tx => {
-      tx.executeSql(`SELECT * FROM PRODUCTS`,
-      [],
-      (tx, result) =>{
-          const productTemp = []
-          setProductsLength(result.rows.length)
-          for (let i = 0; i < result.rows.length; i++) {
-              productTemp.push(result.rows.item(i))
-          }
-          setProducts(productTemp)
-      },
-      error => console.log('Error', error))
-    })
+  const setProductsToState = () =>{
+      Sqlite.transaction( tx => {
+        tx.executeSql(`SELECT * FROM PRODUCTS`,
+        [],
+        (tx, result) =>{
+            let productTemp = []
+            setProductsLength(result.rows.length)
+            for (let i = 0; i < result.rows.length; i++) {
+                productTemp.push(result.rows.item(i))
+            }
+            setProducts(productTemp)
+        },
+        error => console.log('Error', error))
+      })    
   }
 
 
@@ -350,6 +350,7 @@ const App = () => {
 
 
 
+
   const cloudContext = useMemo(
     () =>({
     lines: lines,
@@ -360,7 +361,8 @@ const App = () => {
     setProviders,
     getProducts: (isLocalEmpty) => getProducts(isLocalEmpty),
     setLines,
-    setProducts
+    setProducts,
+    setProductsToState
   }), [lines, products, providers])
 
   const preferencesContext = useMemo(
