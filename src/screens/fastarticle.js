@@ -48,15 +48,17 @@ const FastArticle = () => {
                             (tx, result) => null,
                             error => console.log('Error', error))
                     }else{
-                        tx.executeSql(`INSERT INTO products (code, description, cost, price, tax, line)
-                                    VALUES(?,?,?,?,?,?)`,
+                        tx.executeSql(`INSERT INTO products (code, description, cost, price, tax, line, warehouse1, warehouse2)
+                                    VALUES(?,?,?,?,?,?,?,?)`,
                         [
                             product.code,
                             product.description,
                             product.cost,
                             product.price,
                             product.tax,
-                            product.line
+                            product.line,
+                            0,
+                            0
                         ],
                             (tx, result) => null,
                             error => console.log(error))

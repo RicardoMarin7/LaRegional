@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
+import { View } from 'react-native'
 import { DataTable } from 'react-native-paper'
-import { size, map, filter } from 'lodash'
+import { size, map} from 'lodash'
 import useCloudContext from '../hooks/useCloudContext'
 import SearchBar from './SearchBar'
 
@@ -25,6 +26,10 @@ const Existence = (props) => {
         getPaginatedItems()
     }, [actualPage]);
 
+    useEffect(() => {
+        setFiltered(paginatedItems)
+    }, [paginatedItems]);
+
     const getPaginatedItems = () => {
         let offset = (actualPage - 1) * itemsPerPage
         const paginatedItems = products.slice(offset).slice(0, itemsPerPage)
@@ -33,15 +38,17 @@ const Existence = (props) => {
 
 
     return (
-        <DataTable>
+        <View>
+            <SearchBar array={ products } setArray={setFiltered} onSubmit/>
+            <DataTable>
                 <DataTable.Header>
                     <DataTable.Title>Articulo</DataTable.Title>
                     <DataTable.Title >Descripcion</DataTable.Title>
                     <DataTable.Title numeric>Existencia</DataTable.Title>
                 </DataTable.Header>
 
-                {size(paginatedItems) > 0 && (
-                        map(paginatedItems, product =>(
+                {size(filtered) > 0 && (
+                        map(filtered, product =>(
                             <DataTable.Row key={product.code}>
                                 <DataTable.Cell style={{flex: 2}}>{product.code}</DataTable.Cell>
                                 <DataTable.Cell style={{flex: 3}}>{product.description}</DataTable.Cell>
@@ -60,6 +67,7 @@ const Existence = (props) => {
                     onPageChange={page => setActualPage(page)}
                 />
             </DataTable>
+        </View>
     );
 }
  
