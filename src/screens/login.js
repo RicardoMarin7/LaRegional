@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
-import { SafeAreaView, StyleSheet, ToastAndroid, LogBox} from 'react-native'
-import { TextInput, Button } from 'react-native-paper'
+import React, { useState, useEffect } from 'react'
+import { SafeAreaView, StyleSheet, ToastAndroid, LogBox, PermissionsAndroid } from 'react-native'
+import { TextInput, Button, Title} from 'react-native-paper'
 import firestore from '../utils/firebase'
 
 LogBox.ignoreLogs(['Setting a timer','AsyncStorage'])
@@ -14,6 +14,39 @@ const Login = ({setUser}) => {
     });
     const [secureText, setSecureText] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [locationPermission, setLocationPermission] = useState(null);
+
+    useEffect(() => {
+        getLocationPermission()
+    }, []);
+
+    useEffect(() => {
+        if(locationPermission === false){
+            getLocationPermission()
+        }
+    }, [locationPermission]);
+
+    const getLocationPermission = async () =>{
+        try {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                {
+                    title: 'Noris',
+                    message: 'Noris necesita acceso a tu ubicación'
+                }
+            )
+
+            if(granted === PermissionsAndroid.RESULTS.GRANTED){
+                setLocationPermission(true)
+            }else{
+                setLocationPermission(false)
+            }
+        } catch (error) {
+            alert(error)
+        }
+    }
+
+
 
     const login = async () =>{
 
@@ -67,6 +100,17 @@ const Login = ({setUser}) => {
             
         }
         return decryptedPassword
+    }
+
+    if(!locationPermission){
+        return(
+            <SafeAreaView style={styles.background}>
+                <Title>Para usar la aplicación debes otorgar el permiso de ubicación</Title>
+                <Button mode="contained" style={paperStyles.button} dark onPress={() => getLocationPermission()}>
+                    Otorgar permiso
+                </Button>
+            </SafeAreaView>
+        )
     }
 
     return (

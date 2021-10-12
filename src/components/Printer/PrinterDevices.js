@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { ScrollView, View} from 'react-native'
 import { Button, Title, ActivityIndicator } from 'react-native-paper'
-import { scanDevices, connect } from '../../utils/print'
+import { scanDevices, connect, initPrinter } from '../../utils/print'
 import { map, size } from 'lodash'
 
 const PrinterDevices = ({setPrinterConnected, setVisible}) => {
@@ -9,6 +9,7 @@ const PrinterDevices = ({setPrinterConnected, setVisible}) => {
     const [enabledDevices, setEnabledDevices] = useState(true);
 
     useEffect(() => {
+        initPrinter()
         if(devices === null){
             (
                 async () =>{
@@ -37,6 +38,11 @@ const PrinterDevices = ({setPrinterConnected, setVisible}) => {
             alert(error)
             setEnabledDevices(true)
         }
+    }
+
+    const search = async () =>{
+        const data = await scanDevices()
+        setDevices(data)
     }
 
     if(devices === null){
@@ -71,9 +77,9 @@ const PrinterDevices = ({setPrinterConnected, setVisible}) => {
                 compact
                 dark
                 key={'close'}
-                onPress={() => setVisible(false) }
+                onPress={() => search() }
             >
-                Cerrar
+                Buscar Dispositivos
             </Button>
         </ScrollView>
     );

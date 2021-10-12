@@ -1,4 +1,4 @@
-package com.laregional;
+package com.coytimich.noris;
 
 import com.facebook.react.ReactActivity;
 

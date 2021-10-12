@@ -1,5 +1,7 @@
 import { BluetoothEscposPrinter as BluetoothPrinter, BluetoothManager } from 'react-native-bluetooth-escpos-printer'
 
+
+
 export const connect = async (address) => {
     try {            
         await BluetoothManager.connect(address)
@@ -11,7 +13,15 @@ export const connect = async (address) => {
     }
 }
 
-export const printData = async (data) =>{
+export const initPrinter = () => {
+    try {
+        BluetoothPrinter.printerInit()
+    } catch (error) {
+        alert(error)
+    }
+}
+
+export const printData = async (data, setVisible) =>{
     const title = {
         fonttype: 8,
         heightTimes:3,
@@ -64,6 +74,8 @@ export const printData = async (data) =>{
 
 
         await BluetoothPrinter.printText( `\r\n\r\n`, subtitle);
+
+        setVisible(false)
     } catch (error) {
         alert(`Printer not connected ${error}`)            
         return false
@@ -78,6 +90,26 @@ export const scanDevices = async () =>{
         return JSON.parse(devices)
     } catch (error) {
         alert(error)
+    }
+}
+
+export const printSomething = async () =>{
+    const title = {
+        fonttype: 8,
+        heightTimes:3,
+        widthtimes: 2
+    }
+
+    const subtitle = {
+        fonttype: 8,
+    }
+
+    try {
+        await BluetoothPrinter.printerAlign(BluetoothPrinter.ALIGN.CENTER)
+        await BluetoothPrinter.printText( `Hola Mundo`, title );
+    } catch (error) {
+        alert(`Printer not connected ${error}`)            
+        return false
     }
 }
 

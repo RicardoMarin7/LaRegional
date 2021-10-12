@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { ScrollView, View} from 'react-native'
+import Printer from '../components/Printer'
 import { Title, ActivityIndicator, } from 'react-native-paper'
+import { printSomething } from '../utils/print'
 import MainButton from '../components/MainButton'
 import useCloudContext from '../hooks/useCloudContext'
 import Sqlite from '../utils/Sqlite'
 
 const Home = ({navigation}) => {
-    const { getLines, setLines, getProducts, setProducts, getProviders, setProviders, providers, setProductsToState } = useCloudContext()
-    const [loadingProducts, setLoadingProducts] = useState(true);
+    const { getLines, setLines, getProducts, setProducts, getProviders, setProviders, providers, loadingProducts, setLoadingProducts} = useCloudContext()
     const [productsLength, setProductsLength] = useState(null);
     const [linesLength, setLinesLength] = useState(null);
     const [providersLength, setProvidersLength] = useState(null);
+    const [print, setPrint] = useState(false);
 
     useEffect(async () => {
         await updateProducts()
@@ -50,6 +52,10 @@ const Home = ({navigation}) => {
     useEffect(() => {
         console.log(providers)
     }, [providers]);
+
+    useEffect(() => {
+        
+    }, [loadingProducts]);
 
     const updateProducts = async () =>{
         await getProducts(false)

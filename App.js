@@ -22,6 +22,7 @@ const App = () => {
   const [products, setProducts] = useState([]);
   const [lines, setLines] = useState([])
   const [providers, setProviders] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   const primaryColor = '#f04e60'
   const secondaryColor = '#d04959'
@@ -137,7 +138,7 @@ const App = () => {
         productsTemp.push(product)
       })
 
-      for( const product of productsTemp ){
+      for await ( const product of productsTemp ){
         Sqlite.transaction( tx => {
           tx.executeSql(`SELECT * FROM products WHERE code = ?`,
             [product.code],
@@ -196,9 +197,9 @@ const App = () => {
         })
       }
 
-      await setProductsToState()
-
+      setProductsToState()
       return true
+
     } catch (error) {
       ToastAndroid.showWithGravity(error.toString(), ToastAndroid.LONG, ToastAndroid.CENTER)
       console.log(error)
@@ -297,6 +298,7 @@ const App = () => {
   }
 
   const setLinesToState = async () =>{
+
     await Sqlite.transaction(tx => {
       tx.executeSql(`SELECT * FROM LINES`,
       [],
@@ -356,13 +358,15 @@ const App = () => {
     lines: lines,
     products: products,
     providers: providers,
+    loadingProducts: loadingProducts,
     getLines,
     getProviders,
     setProviders,
     getProducts: (isLocalEmpty) => getProducts(isLocalEmpty),
     setLines,
     setProducts,
-    setProductsToState
+    setProductsToState,
+    setLoadingProducts
   }), [lines, products, providers])
 
   const preferencesContext = useMemo(
