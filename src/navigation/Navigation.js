@@ -58,5 +58,4 @@ const Navigation = () => {
         </Tab.Navigator>
     );
 }
- 
 export default Navigation;

@@ -37,14 +37,72 @@ const App = () => {
   DarkThemeNavigation.colors.background = '#232429'
   DarkThemeNavigation.colors.card = '#232429'
 
-  const getLines = async (isLocalEmpty) => {
+  const isLinesEmpty = async () =>{
+    return new Promise((resolve, reject)=>{    
+      try {
+        let isLocalEmpty = false
+        Sqlite.transaction( tx => {
+          tx.executeSql(`SELECT * FROM LINES`,
+          [],
+          (tx, result) =>{
+              if( result.rows.length < 1) isLocalEmpty = true
+              resolve(isLocalEmpty)
+          },
+          error => console.log('Error', error))
+        })
+      } catch (error) {
+        reject(false)
+      }
+    })
+  }
+
+  const isProductsEmpty = async () =>{
+    return new Promise((resolve, reject)=>{    
+      try {
+        let isLocalEmpty = false
+        Sqlite.transaction( tx => {
+          tx.executeSql(`SELECT * FROM PRODUCTS`,
+          [],
+          (tx, result) =>{
+              if( result.rows.length < 1) isLocalEmpty = true
+              resolve(isLocalEmpty)
+          },
+          error => console.log('Error', error))
+        })
+      } catch (error) {
+        reject(false)
+      }
+    })
+  }
+
+  const isProvidersEmpty = async () =>{
+    return new Promise((resolve, reject)=>{    
+      try {
+        let isLocalEmpty = false
+        Sqlite.transaction( tx => {
+          tx.executeSql(`SELECT * FROM PROVIDERS`,
+          [],
+          (tx, result) =>{
+              if( result.rows.length < 1) isLocalEmpty = true
+              resolve(isLocalEmpty)
+          },
+          error => console.log('Error', error))
+        })
+      } catch (error) {
+        reject(false)
+      }
+    })
+  }
+
+  const getLines = async (forceSyncAll) => {
     try {
       let data
-      console.log('Getting Lines')
+      const isLocalEmpty = await isLinesEmpty()
       const response = await firestore.collection(`Lineas${DeviceInfo.getUniqueId()}`).limit(1).get()
       
       if(response.empty || isLocalEmpty){
         data = await firestore.collection(`Lineas`).get()
+        console.log('Sync All Lines')
       }else{
         data = await firestore.collection(`Lineas${DeviceInfo.getUniqueId()}`).where('app', '==', false).get()
       }
@@ -105,8 +163,6 @@ const App = () => {
       }
       
       await setLinesToState()
-
-
       return true
     } catch (error) {
       console.log('Error', error)
@@ -114,105 +170,112 @@ const App = () => {
     }
   }
 
-  const getProducts = async (isLocalEmpty) => {
-    try {
-      console.log('Products LocalEmpty', isLocalEmpty)
-      let data
-      console.log('Getting Products')
-      const response = await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`).limit(1).get()
-      
-      if(response.empty || isLocalEmpty){
-        data = await firestore.collection(`Productos`).get()
-      }else{
-        data = await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`).where('app', '==', false).get()
-      }
-
-      if(data.empty){
-        console.log('No hay productos por descargar')
-      }
-
-      const productsTemp = []
-      
-      data.forEach( async (productData) =>{
-        const product = productData.data()
-        productsTemp.push(product)
-      })
-
-      for await ( const product of productsTemp ){
-        Sqlite.transaction( tx => {
-          tx.executeSql(`SELECT * FROM products WHERE code = ?`,
-            [product.code],
-            (tx, results) =>{
-              if(results.rows.length > 0){
-                console.log('Update')
-                tx.executeSql(`UPDATE products SET 
-                              description = ?, 
-                              cost = ?, 
-                              price = ?, 
-                              tax = ?, 
-                              line = ?, warehouse1 = ?, warehouse2 = ? WHERE code = ?`,
-                [ product.description,
-                  product.cost,
-                  product.price,
-                  product.tax,
-                  product.line,
-                  product.warehouse1,
-                  product.warehouse2,
-                  product.code,
-                ],
-                async (tx, result) => {
-                  await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`).doc(product.code).set({
-                    ...product,
-                    app: true
-                  }, {merge: true})
-                  console.log('Producto Actualizado con exito', product.code )
-                },
-                error => console.log('Error', error))
-              }else{
-                tx.executeSql(`INSERT INTO products (code, description, cost, price, tax, line, warehouse1, warehouse2)
-                              VALUES(?,?,?,?,?,?,?,?)`,
-                [
-                  product.code,
-                  product.description,
-                  product.cost,
-                  product.price,
-                  product.tax,
-                  product.line,
-                  product.warehouse1,
-                  product.warehouse2
-                ],
-                async (tx, result) => {
-                  await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`
-                  ).doc(product.code).set({
-                    ...product,
-                    app: true
-                  }, {merge: true})
-                  console.log('Producto Guardado con exito', product.code )
-                },
-                error => console.log(error))
-              }
-            },
-            error => console.log(error) //Callback de error
-          )
+  const getProducts = async (forceSyncAll) => {
+    return new Promise( async (resolve, reject) =>{
+      try {
+        const isLocalEmpty = await isProductsEmpty()
+        let data
+        const response = await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`).limit(1).get()
+        
+        if(response.empty || isLocalEmpty){
+          data = await firestore.collection(`Productos`).get()
+          console.log('Sync All Products')
+        }else{
+          data = await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`).where('app', '==', false).get()
+        }
+  
+        if(data.empty){
+          console.log('No hay productos por descargar')
+        }
+  
+        const productsTemp = []
+        
+        data.forEach( async (productData) =>{
+          const product = productData.data()
+          productsTemp.push(product)
         })
+  
+        for await ( const product of productsTemp ){
+
+          console.log(`Stringify de codigos adicionales de : ${product.code}`, JSON.stringify(product.additionalCodes))
+          Sqlite.transaction( tx => {
+            tx.executeSql(`SELECT * FROM products WHERE code = ?`,
+              [product.code],
+              (tx, results) =>{
+                if(results.rows.length > 0){
+                  tx.executeSql(`UPDATE products SET 
+                                description = ?, 
+                                  cost = ?, 
+                                price = ?, 
+                                tax = ?, 
+                                line = ?, warehouse1 = ?, warehouse2 = ?, additionalCodes = ? WHERE code = ?`,
+                  [ product.description,
+                    product.cost,
+                    product.price,
+                    product.tax,
+                    product.line,
+                    product.warehouse1,
+                    product.warehouse2,
+                    JSON.stringify(product.additionalCodes),
+                    product.code,
+                  ],
+                  async (tx, result) => {
+                    await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`).doc(product.code).set({
+                      ...product,
+                      app: true
+                    }, {merge: true})
+                    console.log('Producto Actualizado con exito', product.code )
+                  },
+                  error => console.log('Error', error))
+                }
+                else{
+                  tx.executeSql(`INSERT INTO products (code, description, cost, price, tax, line, warehouse1, warehouse2, additionalCodes)
+                                VALUES(?,?,?,?,?,?,?,?,?)`,
+                  [
+                    product.code,
+                    product.description,
+                    product.cost,
+                    product.price,
+                    product.tax,
+                    product.line,
+                    product.warehouse1,
+                    product.warehouse2,
+                    JSON.stringify(product.additionalCodes)
+                  ],
+                  async (tx, result) => {
+                    await firestore.collection(`Productos${DeviceInfo.getUniqueId()}`
+                    ).doc(product.code).set({
+                      ...product,
+                      app: true
+                    }, {merge: true})
+                    console.log('Producto Guardado con exito', product.code )
+                  },
+                  error => console.log(error))
+                }
+              },
+              error => console.log(error) //Callback de error
+            )
+          })
+        }
+  
+        await setProductsToState()
+        resolve(true)
+  
+      } catch (error) {
+        ToastAndroid.showWithGravity(error.toString(), ToastAndroid.LONG, ToastAndroid.CENTER)
+        console.log(error)
       }
-
-      setProductsToState()
-      return true
-
-    } catch (error) {
-      ToastAndroid.showWithGravity(error.toString(), ToastAndroid.LONG, ToastAndroid.CENTER)
-      console.log(error)
-    }
+    })  
   }
 
   const getProviders = async (isLocalEmpty) =>{
     try {
+      const isLocalEmpty = await isProvidersEmpty()
       let data
-      console.log('Getting Providers')
       const response = await firestore.collection(`Proveedores${DeviceInfo.getUniqueId()}`).limit(1).get()
       if(response.empty || isLocalEmpty){
         data = await firestore.collection(`Proveedores`).get()
+        console.log('Sync All Providers')
       }else{
         data = await firestore.collection(`Proveedores${DeviceInfo.getUniqueId()}`).where('app', '==', false).get()
       }
@@ -283,50 +346,59 @@ const App = () => {
   }
 
   const setProvidersToState = async () =>{
-    await Sqlite.transaction(tx => {
-      tx.executeSql(`SELECT * FROM PROVIDERS`,
-      [],
-      (tx, result) =>{
-          let providersTemp = []
-          for (let i = 0; i < result.rows.length; i++) {
-              providersTemp.push(result.rows.item(i))
-          }
-          setProviders(providersTemp)
-      },
-      error => console.log('Error', error))
+    return new Promise((resolve, reject) => {
+      Sqlite.transaction(tx => {
+        tx.executeSql(`SELECT * FROM PROVIDERS`,
+        [],
+        (tx, result) =>{
+            let providersTemp = []
+            for (let i = 0; i < result.rows.length; i++) {
+                providersTemp.push(result.rows.item(i))
+            }
+            setProviders(providersTemp)
+            resolve(true)
+        },
+        error => console.log('Error', error))
+      })
     })
   }
 
   const setLinesToState = async () =>{
-
-    await Sqlite.transaction(tx => {
-      tx.executeSql(`SELECT * FROM LINES`,
-      [],
-      (tx, result) =>{
-          let linesTemp = []
-          for (let i = 0; i < result.rows.length; i++) {
-              linesTemp.push(result.rows.item(i))
-          }
-          setLines(linesTemp)
-      },
-      error => console.log('Error', error))
+    return new Promise((resolve, reject) =>{
+      Sqlite.transaction(tx => {
+        tx.executeSql(`SELECT * FROM LINES`,
+        [],
+        (tx, result) =>{
+            let linesTemp = []
+            for (let i = 0; i < result.rows.length; i++) {
+                linesTemp.push(result.rows.item(i))
+                
+            }
+            setLines(linesTemp)
+            resolve(true)
+        },
+        error => console.log('Error', error))
+      })
     })
+    
   }
 
-  const setProductsToState = () =>{
+  const setProductsToState = async () =>{    
+    return new Promise ((resolve,reject)=>{      
       Sqlite.transaction( tx => {
         tx.executeSql(`SELECT * FROM PRODUCTS`,
         [],
         (tx, result) =>{
             let productTemp = []
-            setProductsLength(result.rows.length)
             for (let i = 0; i < result.rows.length; i++) {
                 productTemp.push(result.rows.item(i))
             }
             setProducts(productTemp)
+            resolve(true)
         },
         error => console.log('Error', error))
-      })    
+      }) 
+    })
   }
 
 
@@ -349,9 +421,6 @@ const App = () => {
       }
     )()
   }, []);
-
-
-
 
   const cloudContext = useMemo(
     () =>({

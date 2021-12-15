@@ -21,7 +21,8 @@ Sqlite.transaction(tx => {
                     tax TEXT,
                     line TEXT,
                     warehouse1 NUMERIC,
-                    warehouse2 NUMERIC)`,
+                    warehouse2 NUMERIC,
+                    additionalCodes Text)`,
     [],
     (tx, result) => null,
     error => console.log('Error', error))

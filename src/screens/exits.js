@@ -8,6 +8,7 @@ import { size, map, find, filter} from 'lodash'
 import SearchBar from '../components/SearchBar'
 import firestore from '../utils/firebase'
 import Printer from '../components/Printer'
+import { addProduct } from '../utils/searchbarOperations'
 
 const Exits = () => {
     const date = new Date()
@@ -106,31 +107,12 @@ const Exits = () => {
     }
 
     const handleAddProduct = (code) =>{
-        if(code === '') return
-
-        const alreadyAdded = find( exitProducts, { code: code.toUpperCase() } )
-        if(alreadyAdded){
-            if(isNaN(alreadyAdded.quantity)){
-                return
-            }
-            setCodeInput('')
-            console.log('Quantity', alreadyAdded.quantity + 1 )
-            handleProductChange(code.toUpperCase(), 'quantity', alreadyAdded.quantity + 1)
-            return
+        const response = addProduct(code, exitProducts, products, setCodeInput, setExitProducts)
+        if(response){
+            ToastAndroid.showWithGravity(`Articulo ${code.toUpperCase()} añadido con éxito`, ToastAndroid.SHORT, ToastAndroid.CENTER)
+        }else{
+            ToastAndroid.showWithGravity(`El articulo ${code}, no existe`, ToastAndroid.SHORT, ToastAndroid.CENTER)                
         }
-
-        const productToAdd = find( products, { code: code.toUpperCase() } )
-        if(!productToAdd){
-            ToastAndroid.showWithGravity(`El articulo ${code}, no existe`, ToastAndroid.SHORT, ToastAndroid.CENTER)
-            setCodeInput('')
-            return
-        }
-
-        const exitProductsTemp = [...exitProducts]
-        exitProductsTemp.push({...productToAdd, quantity: 1})
-        setExitProducts(exitProductsTemp)
-        setCodeInput('')
-        ToastAndroid.showWithGravity(`Articulo ${code.toUpperCase()} añadido con éxito`, ToastAndroid.SHORT, ToastAndroid.CENTER)
     }
 
     const handleProductChange = (code, parameter, value) => {

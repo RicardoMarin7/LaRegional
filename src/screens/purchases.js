@@ -4,10 +4,11 @@ import { TextInput, Title, Card, Button, IconButton, Modal, Portal, List } from 
 import DeviceInfo from 'react-native-device-info'
 import usePreferencesContext from '../hooks/usePreferencesContext'
 import useCloudContext from '../hooks/useCloudContext'
-import { size, map, find, filter} from 'lodash'
+import { size, map, filter} from 'lodash'
 import SearchBar from '../components/SearchBar'
 import firestore from '../utils/firebase'
 import Printer from '../components/Printer'
+import { addProduct } from '../utils/searchbarOperations'
 
 const Purchases = () => {
     const date = new Date()
@@ -113,30 +114,12 @@ const Purchases = () => {
     }
 
     const handleAddProduct = (code) =>{
-        if(code === '') return
-
-        const alreadyAdded = find( purchaseProducts, { code: code.toUpperCase() } )
-        if(alreadyAdded){
-            if(isNaN(alreadyAdded.quantity)){
-                return
-            }
-            setCodeInput('')
-            handleProductChange(code.toUpperCase(), 'quantity', alreadyAdded.quantity + 1)
-            return
+        const response = addProduct(code, purchaseProducts, products, setCodeInput, setPurchaseProducts)
+        if(response){
+            ToastAndroid.showWithGravity(`Articulo ${code.toUpperCase()} añadido con éxito`, ToastAndroid.SHORT, ToastAndroid.CENTER)
+        }else{
+            ToastAndroid.showWithGravity(`El articulo ${code}, no existe`, ToastAndroid.SHORT, ToastAndroid.CENTER)                
         }
-
-        const productToAdd = find( products, { code: code.toUpperCase() } )
-        if(!productToAdd){
-            ToastAndroid.showWithGravity(`El articulo ${code}, no existe`, ToastAndroid.SHORT, ToastAndroid.CENTER)
-            setCodeInput('')
-            return
-        }
-
-        const exitProductsTemp = [...purchaseProducts]
-        exitProductsTemp.push({...productToAdd, quantity: 1})
-        setPurchaseProducts(exitProductsTemp)
-        setCodeInput('')
-        ToastAndroid.showWithGravity(`Articulo ${code.toUpperCase()} añadido con éxito`, ToastAndroid.SHORT, ToastAndroid.CENTER)
     }
 
     const handleProductChange = (code, parameter, value) => {
