@@ -79,6 +79,7 @@ const Exits = () => {
 
             setPrintData({
                 ...exit,
+                folio,
                 type:'Salida',
                 deviceName,
                 deviceUniqueID,

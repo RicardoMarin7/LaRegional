@@ -75,6 +75,7 @@ const Entries = () => {
 
             await firestore.collection('Entradas').doc(folio.toString()).set({
                 ...entry,
+                folio,
                 deviceName,
                 deviceUniqueID,
                 user: user.user,
@@ -89,6 +90,7 @@ const Entries = () => {
             setPrintData({
                 ...entry,
                 type:'Entrada',
+                folio,
                 deviceName,
                 deviceUniqueID,
                 user: user.user,
@@ -282,7 +284,7 @@ const Entries = () => {
                     <Button style={{flex:1}} mode='contained' onPress={handleNextStep}>Siguiente</Button>
                 </View>
 
-                <Printer setVisible={setPrint} visible={print} data={printData} />
+                <Printer data={printData} />
         </SafeAreaView>
     );
 }

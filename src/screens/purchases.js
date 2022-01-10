@@ -88,6 +88,7 @@ const Purchases = () => {
                 ...purchase,
                 type:'Compra',
                 deviceName,
+                folio,
                 deviceUniqueID,
                 user: user.user,
                 server: false,

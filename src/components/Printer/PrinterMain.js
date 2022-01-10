@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Modal, Portal} from 'react-native-paper'
+import { Modal, Portal, Text} from 'react-native-paper'
 import { isPrinterConnected, printData} from '../../utils/print'
 import PrinterDevices from './PrinterDevices'
 
-const PrinterMain = ({ visible, setVisible, data}) => {
+const PrinterMain = ({visible, setVisible, data}) => {
     const [printerConnected, setprinterConnected] = useState(null);
 
     useEffect(() => {
@@ -14,10 +14,6 @@ const PrinterMain = ({ visible, setVisible, data}) => {
             }
             )()
         }
-    }, []);
-
-    useEffect(() => {
-        
     }, [data]);
 
     useEffect(() => {
@@ -31,12 +27,13 @@ const PrinterMain = ({ visible, setVisible, data}) => {
             <Modal 
                 visible={visible}
                 dismissable={false}
-            >  
+            > 
                 <PrinterDevices 
                     setPrinterConnected={setprinterConnected} 
+                    printerConnected={printerConnected}
                     setVisible={setVisible}
-
-                    />
+                    data={data}
+                />
             </Modal>
         </Portal>
     );

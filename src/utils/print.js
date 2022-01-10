@@ -1,5 +1,5 @@
 import { BluetoothEscposPrinter as BluetoothPrinter, BluetoothManager } from 'react-native-bluetooth-escpos-printer'
-
+import DeviceInfo from 'react-native-device-info'
 
 
 export const connect = async (address) => {
@@ -22,6 +22,7 @@ export const initPrinter = () => {
 }
 
 export const printData = async (data, setVisible) =>{
+    const model = DeviceInfo.getModel()
     const title = {
         fonttype: 8,
         heightTimes:3,
@@ -32,10 +33,16 @@ export const printData = async (data, setVisible) =>{
         fonttype: 8,
     }
 
-    const productColumnWidths = [12, 23, 6, 6]
-    const productColumnAligns = [BluetoothPrinter.ALIGN.LEFT, BluetoothPrinter.ALIGN.LEFT, BluetoothPrinter.ALIGN.RIGHT, BluetoothPrinter.ALIGN.RIGHT]
-    const totalColumnWidth = [47]
-    const totalColumnAlign = [BluetoothPrinter.ALIGN.RIGHT]
+    let productColumnWidths = [12, 23, 6, 6]
+    let productColumnAligns = [BluetoothPrinter.ALIGN.LEFT, BluetoothPrinter.ALIGN.LEFT, BluetoothPrinter.ALIGN.RIGHT, BluetoothPrinter.ALIGN.RIGHT]
+    let totalColumnWidth = [48]
+    let totalColumnAlign = [BluetoothPrinter.ALIGN.RIGHT]
+
+    if(model === 'TC26'){
+        productColumnWidths = [14, 18]
+        productColumnAligns = [BluetoothPrinter.ALIGN.LEFT, BluetoothPrinter.ALIGN.LEFT]
+        totalColumnWidth = [32]
+    }
 
     try {
         await BluetoothPrinter.printerAlign(BluetoothPrinter.ALIGN.CENTER)
@@ -44,6 +51,7 @@ export const printData = async (data, setVisible) =>{
         await BluetoothPrinter.printText( `Fecha: ${data.date} Hora:${data.time} \r\n`, subtitle);
         await BluetoothPrinter.printText( `Usuario: ${data.user} \r\n`, subtitle);
         await BluetoothPrinter.printText( `Dispositivo:${data.deviceName} \r\n`, subtitle);
+        await BluetoothPrinter.printText( `Folio:${data.folio} \r\n`, subtitle);
         if(data?.provider){
             await BluetoothPrinter.printText( `Proveedor:${data.provider} ${data.providerName} \r\n`, subtitle);
         }
@@ -52,12 +60,28 @@ export const printData = async (data, setVisible) =>{
         await BluetoothPrinter.printText("------------------------------------------------\r\n", {});
         
         for ( const product of data.products ){
-            await BluetoothPrinter.printColumn(
-                productColumnWidths,
-                productColumnAligns,
-                [`${product?.code}`, `${product?.description}`, `${product?.quantity}`, `$${new Intl.NumberFormat("en-US").format(product?.cost)}`],
-                {}
-            )
+            if(model === 'TC26'){
+                await BluetoothPrinter.printColumn(
+                    productColumnWidths,
+                    productColumnAligns,
+                    [`${product?.code}`, `${product?.description}`],
+                    {}
+                )
+                await BluetoothPrinter.printColumn(
+                    productColumnWidths,
+                    productColumnAligns,
+                    [`${product?.quantity}`, `$${new Intl.NumberFormat("en-US").format(product?.cost)}`],
+                    {}
+                )
+            }else{
+                await BluetoothPrinter.printColumn(
+                    productColumnWidths,
+                    productColumnAligns,
+                    [`${product?.code}`, `${product?.description}`, `${product?.quantity}`, `$${new Intl.NumberFormat("en-US").format(product?.cost)}`],
+                    {}
+                )
+            }
+            
             await BluetoothPrinter.printText( `\r\n`, subtitle);
         }
 
@@ -90,26 +114,6 @@ export const scanDevices = async () =>{
         return JSON.parse(devices)
     } catch (error) {
         alert(error)
-    }
-}
-
-export const printSomething = async () =>{
-    const title = {
-        fonttype: 8,
-        heightTimes:3,
-        widthtimes: 2
-    }
-
-    const subtitle = {
-        fonttype: 8,
-    }
-
-    try {
-        await BluetoothPrinter.printerAlign(BluetoothPrinter.ALIGN.CENTER)
-        await BluetoothPrinter.printText( `Hola Mundo`, title );
-    } catch (error) {
-        alert(`Printer not connected ${error}`)            
-        return false
     }
 }
 

@@ -109,6 +109,7 @@ const App = () => {
 
       if(data.empty){
         console.log('No hay lineas por descargar')
+        await setLinesToState()
         return
       }
 
@@ -186,6 +187,9 @@ const App = () => {
   
         if(data.empty){
           console.log('No hay productos por descargar')
+          await setProductsToState()
+          resolve(true)
+          return
         }
   
         const productsTemp = []
@@ -193,6 +197,7 @@ const App = () => {
         data.forEach( async (productData) =>{
           const product = productData.data()
           productsTemp.push(product)
+          
         })
   
         for await ( const product of productsTemp ){
@@ -282,6 +287,7 @@ const App = () => {
 
       if(data.empty){
         console.log('No hay Proveedores por descargar')
+        await setProvidersToState()
         return
       }
 
@@ -379,8 +385,7 @@ const App = () => {
         },
         error => console.log('Error', error))
       })
-    })
-    
+    })    
   }
 
   const setProductsToState = async () =>{    

@@ -3,11 +3,28 @@ import { ScrollView, View} from 'react-native'
 import { Title, ActivityIndicator, } from 'react-native-paper'
 import MainButton from '../components/MainButton'
 import useCloudContext from '../hooks/useCloudContext'
-import Sqlite from '../utils/Sqlite'
+import Printer from '../components/Printer'
+import firestore from '../utils/firebase'
 
 const Home = ({navigation}) => {
     const { getProducts, getLines, getProviders} = useCloudContext()
     const [loadingProducts, setLoadingProducts] = useState(true);
+    const [print, setPrint] = useState(false)
+    const [printData, setPrintData] = useState(null);
+
+    const printLastPurchase = async () =>{
+        try {            
+            const response = await firestore.collection(`Compras`).limit(1).get()
+            if(!response.empty) response.forEach( entry => {
+                console.log(entry.data())
+                setPrintData(entry.data())
+                setPrint(true)
+            })        
+            
+        } catch (error) {
+            console.log(error)
+        }
+    }
 
     useEffect( () => {
         (async () =>{
@@ -51,6 +68,9 @@ const Home = ({navigation}) => {
             <MainButton title='Actualizar Productos' icon='update' execute={async () => await getProducts()} />
             <MainButton title='Actualizar Proveedores' icon='update' execute={ async () => await getProviders()} />
             <MainButton title='Actualizar Lineas' icon='update' execute={ async () => await getLines()} />
+            <MainButton title='Imprimir Última Entrada' icon='printer' execute={ async () => await printLastPurchase()} />
+
+            <Printer setVisible={setPrint} visible={print} data={printData} />
         </ScrollView>
     );
 }

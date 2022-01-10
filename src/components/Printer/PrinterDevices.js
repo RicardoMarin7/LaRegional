@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import { ScrollView, View} from 'react-native'
-import { Button, Title, ActivityIndicator } from 'react-native-paper'
-import { scanDevices, connect, initPrinter } from '../../utils/print'
+import { Button, Title, ActivityIndicator, RadioButton } from 'react-native-paper'
+import { scanDevices, connect, initPrinter, printData } from '../../utils/print'
 import { map, size } from 'lodash'
 
-const PrinterDevices = ({setPrinterConnected, setVisible}) => {
+const PrinterDevices = ({setPrinterConnected, data, printerConnected, setVisible}) => {
     const [devices, setDevices] = useState(null);
     const [enabledDevices, setEnabledDevices] = useState(true);
 
     useEffect(() => {
-        initPrinter()
+        if(printerConnected){
+            printData(data, setVisible)
+            return
+        }else{
+            initPrinter()
+        }
+        
         if(devices === null){
             (
                 async () =>{
@@ -25,7 +31,7 @@ const PrinterDevices = ({setPrinterConnected, setVisible}) => {
     }, []);
 
     useEffect(() => {
-        console.log(devices)
+        
     }, [devices]);
 
     const connectDevice = async (address) =>{
@@ -41,8 +47,12 @@ const PrinterDevices = ({setPrinterConnected, setVisible}) => {
     }
 
     const search = async () =>{
-        const data = await scanDevices()
-        setDevices(data)
+        try {            
+            const data = await scanDevices()
+            setDevices(data)
+        } catch (error) {
+            alert(error)
+        }
     }
 
     if(devices === null){
@@ -57,6 +67,8 @@ const PrinterDevices = ({setPrinterConnected, setVisible}) => {
     return (
         <ScrollView>
             <Title style={{textAlign:'center'}}>Conectar a impresora</Title>
+
+
             {size(devices?.paired) > 0 && (
                 map(devices.paired, device =>(
                     <Button
